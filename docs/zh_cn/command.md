@@ -4,7 +4,7 @@
 
 命令分为两个根：`/pearlCannonConfig` 在服务端执行，需要 OP（1.21.11 起的 `commands/moderator`，之前为权限等级 2）；`/pearlCannonCalc` 在客户端本地执行，不需要 OP。
 
-## 珍珠炮配置 (pearlCannonConfig) — 服务端
+## 配置器 (pearlCannonConfig)
 
 &emsp;标定珍珠炮的各组阵列推力，并把配置保存在存档目录的 `pearlcannon/` 下（一炮一个 json）。
 
@@ -52,7 +52,7 @@
 
 &emsp;&emsp;- 服务端配置保存在存档目录的 `pearlcannon/<名称>.json`
 
-## 客户端计算 (pearlCannonCalc) — 客户端
+## 计算器 (pearlCannonCalc)
 
 &emsp;计算完全在客户端执行，读取 `.minecraft/config/pearlcannon/<名称>.json`。不需要 OP，也不需要服务端在线（配置已经在本地时）。
 

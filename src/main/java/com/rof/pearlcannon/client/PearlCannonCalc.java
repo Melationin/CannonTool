@@ -43,7 +43,7 @@ public final class PearlCannonCalc
         PearlCannonConfig config = ClientCannonConfigs.get(name);
         if (config == null)
         {
-            ClientMessages.fail(source, "r 本地没有配置 " + name, "g  ；执行 ", "y /pearlCannonCalc pull " + name,
+            ClientMessages.fail(source, "r 本地没有配置 " + name, "g  ；执行 ", "y /pearlCannonCalc pull ", "w " + name,
                     "g  拉取，或把 json 放进 ", "f " + ClientCannonConfigs.directory());
             return 0;
         }
@@ -113,7 +113,7 @@ public final class PearlCannonCalc
         LastResults last = LAST_RESULTS.get(source.getPlayer().getUUID());
         if (last == null)
         {
-            ClientMessages.fail(source, "r 还没有计算结果，先执行 ", "y /pearlCannonCalc normal <名称> <x> <z>");
+            ClientMessages.fail(source, "r 还没有计算结果，先执行 ", "y /pearlCannonCalc normal ", "w <名称> <x> <z>");
             return 0;
         }
 

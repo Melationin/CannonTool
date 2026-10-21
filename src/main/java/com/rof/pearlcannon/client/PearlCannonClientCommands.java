@@ -109,7 +109,7 @@ public final class PearlCannonClientCommands
         List<String> names = ClientCannonConfigs.names();
         if (names.isEmpty())
         {
-            ClientMessages.send(source, "d 珍珠炮 ", "g 本地还没有配置；执行 ", "y /pearlCannonCalc pull <名称>",
+            ClientMessages.send(source, "d 珍珠炮 ", "g 本地还没有配置；执行 ", "y /pearlCannonCalc pull ", "w <名称>",
                     "g  从服务端拉取，或把 json 放进 ", "f " + ClientCannonConfigs.directory());
             return;
         }
@@ -134,13 +134,13 @@ public final class PearlCannonClientCommands
 
     private static void sendHelp(FabricClientCommandSource source)
     {
-        ClientMessages.send(source, "d 珍珠炮 ", "g 客户端计算（配置在本地）");
-        ClientMessages.send(source, "g  /pearlCannonCalc normal ", "y <名称> <x> <z> [最大tick]");
-        ClientMessages.send(source, "g  /pearlCannonCalc plane ", "y <名称> <x> <z> <y> [最大tick]");
-        ClientMessages.send(source, "g  /pearlCannonCalc expand ", "y <序号>");
-        ClientMessages.send(source, "g  /pearlCannonCalc pull ", "y [名称]", "g  从服务端拉取配置到本地");
-        ClientMessages.send(source, "g  /pearlCannonCalc list", "g  查看本地配置");
-        ClientMessages.send(source, "g  服务端配置命令：", "y /pearlCannonConfig ...", "g （需要 OP）");
+        ClientMessages.send(source, "d 珍珠炮 ", "g 计算器");
+        ClientMessages.send(source, "y  /pearlCannonCalc normal ", "w <名称> <x> <z> [最大tick]");
+        ClientMessages.send(source, "y  /pearlCannonCalc plane ", "w <名称> <x> <z> <y> [最大tick]");
+        ClientMessages.send(source, "y  /pearlCannonCalc expand ", "w <序号>");
+        ClientMessages.send(source, "y  /pearlCannonCalc pull ", "w [名称]", "g  从服务端拉取配置到本地");
+        ClientMessages.send(source, "y  /pearlCannonCalc list", "g  查看本地配置");
+        ClientMessages.send(source, "g  配置器：", "y /pearlCannonConfig ...", "g （需要 OP）");
         ClientMessages.send(source, "f  本地配置目录: " + ClientCannonConfigs.directory());
     }
 

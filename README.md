@@ -2,7 +2,7 @@
 
 一个独立运行的 Fabric 模组：在游戏内标定珍珠炮各组阵列的推力，并按目标坐标反解装药方案、输出二进制码。
 
-不依赖 Carpet。服务端负责标定与配置（`/pearlCannonConfig`），客户端负责计算（`/pearlCannonCalc`）；两侧的配置分别存储，格式都是「一炮一个 json」。
+不依赖 Carpet。服务端配置器（`/pearlCannonConfig`）负责标定与配置，客户端计算器（`/pearlCannonCalc`）负责计算；两侧的配置分别存储，格式都是「一炮一个 json」。
 
 ## 前置模组
 

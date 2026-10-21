@@ -118,7 +118,7 @@ public final class PearlCannonConfigCommands
                     String name = PearlCalibration.sessionName(player.getUUID());
                     if (name == null)
                     {
-                        Messages.fail(context.getSource(), "r 请先执行 ", "y /pearlCannonConfig start <名称>");
+                        Messages.fail(context.getSource(), "r 请先执行 ", "y /pearlCannonConfig start ", "w <名称>");
                         return 0;
                     }
                     PearlCalibration.resetTick(player, name);
@@ -183,7 +183,7 @@ public final class PearlCannonConfigCommands
         String name = PearlCalibration.sessionName(player.getUUID());
         if (name == null)
         {
-            Messages.fail(source, "r 请先执行 ", "y /pearlCannonConfig start <名称>");
+            Messages.fail(source, "r 请先执行 ", "y /pearlCannonConfig start ", "w <名称>");
             return null;
         }
         PearlCannonConfig config = PearlCannonConfigs.get(name);
@@ -329,9 +329,9 @@ public final class PearlCannonConfigCommands
         if (!PearlCannonRom.configured(config.rom))
         {
             Messages.send(source, "r 未配置完整：需要顺序 + 红权重 + 蓝权重");
-            Messages.send(source, "g  /pearlCannonConfig rom order ", "y <" + String.join("|", PearlCannonRom.ORDERS) + ">");
-            Messages.send(source, "g  /pearlCannonConfig rom red ", "y <w1,w2,...>");
-            Messages.send(source, "g  /pearlCannonConfig rom blue ", "y <w1,w2,...>");
+            Messages.send(source, "y  /pearlCannonConfig rom order ", "w <" + String.join("|", PearlCannonRom.ORDERS) + ">");
+            Messages.send(source, "y  /pearlCannonConfig rom red ", "w <w1,w2,...>");
+            Messages.send(source, "y  /pearlCannonConfig rom blue ", "w <w1,w2,...>");
             return;
         }
 
@@ -399,16 +399,13 @@ public final class PearlCannonConfigCommands
 
     private static void sendHelp(CommandSourceStack source)
     {
-        Messages.send(source, "d 珍珠炮 ", "g 服务端配置");
-        Messages.send(source, "g  /pearlCannonConfig start ", "y <名称>", "g  开始配置");
-        Messages.send(source, "g  /pearlCannonConfig stop", "g  / ", "y list", "g  / ", "y info", "g  / ", "y delete <名称>");
-        Messages.send(source, "g  /pearlCannonConfig maxTnt ", "y <数量>", "g  设置最大单侧药量");
-        Messages.send(source, "g  /pearlCannonConfig rom order ", "y <RBD|RDB|BRD|BDR|DRB|DBR>");
-        Messages.send(source, "g  /pearlCannonConfig rom red|blue ", "y <w1,w2,...>");
-        Messages.send(source, "g  /pearlCannonConfig rom red|blue inverse ", "y <w1,w2,...>");
-        Messages.send(source, "g  /pearlCannonConfig rom show", "g  / ", "y give", "g  / ", "y resetTick");
-        Messages.send(source, "f  样本名: 00B 00R 01B 01R 10B 10R 11B 11R；空配置: ZZ");
-        Messages.send(source, "g  配置保存在存档目录的 pearlcannon/ ，一炮一个 json");
-        Messages.send(source, "g  计算在客户端执行：", "y /pearlCannonCalc normal ...", "g  或 ", "y /pearlCannonCalc pull <名称>");
+        Messages.send(source, "d 珍珠炮 ", "g 配置器");
+        Messages.send(source, "y  /pearlCannonConfig start ", "w <名称>", "g  开始配置");
+        Messages.send(source, "y  /pearlCannonConfig stop", "g  / ", "y list", "g  / ", "y info", "g  / ", "y delete ", "w <名称>");
+        Messages.send(source, "y  /pearlCannonConfig maxTnt ", "w <数量>", "g  设置最大单侧药量");
+        Messages.send(source, "y  /pearlCannonConfig rom order ", "w <RBD|RDB|BRD|BDR|DRB|DBR>");
+        Messages.send(source, "y  /pearlCannonConfig rom red|blue ", "w <w1,w2,...>");
+        Messages.send(source, "y  /pearlCannonConfig rom red|blue inverse ", "w <w1,w2,...>");
+        Messages.send(source, "y  /pearlCannonConfig rom show", "g  / ", "y give", "g  / ", "y resetTick");
     }
 }

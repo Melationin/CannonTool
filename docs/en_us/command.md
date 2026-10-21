@@ -4,7 +4,7 @@
 
 Commands have two roots: `/pearlCannonConfig` runs on the server and requires OP (`commands/moderator` since 1.21.11, permission level 2 before that); `/pearlCannonCalc` runs locally on the client and needs no permission.
 
-## Pearl cannon configuration (pearlCannonConfig) — server
+## Configurator (pearlCannonConfig)
 
 &emsp;Calibrates each cannon array's thrust and stores one json per cannon in the world's `pearlcannon/` directory.
 
@@ -52,7 +52,7 @@ Commands have two roots: `/pearlCannonConfig` runs on the server and requires OP
 
 &emsp;&emsp;- Server configurations are stored as `<world>/pearlcannon/<name>.json`
 
-## Client calculation (pearlCannonCalc) — client
+## Calculator (pearlCannonCalc)
 
 &emsp;All calculation happens on the client, reading `.minecraft/config/pearlcannon/<name>.json`. It needs no OP and works without the server once the configuration is stored locally.
 
