@@ -39,9 +39,6 @@ public class PearlCannonClient implements ClientModInitializer
             }
         });
 
-        ClientPlayNetworking.registerGlobalReceiver(PearlCannonPayloads.HelpPayload.TYPE, (payload, context) ->
-                ClientHelp.show(payload.title(), payload.text()));
-
         ClientTickEvents.END_CLIENT_TICK.register(client ->
         {
             Component display = PearlCannonCalc.hudDisplay();

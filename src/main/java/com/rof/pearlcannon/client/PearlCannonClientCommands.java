@@ -33,7 +33,7 @@ public final class PearlCannonClientCommands
         LiteralArgumentBuilder<FabricClientCommandSource> root = literal("pearlCannonCalc")
                 .executes(context ->
                 {
-                    sendHelp();
+                    sendHelp(context.getSource());
                     return 1;
                 });
 
@@ -144,16 +144,20 @@ public final class PearlCannonClientCommands
         }
     }
 
-    private static void sendHelp()
+    private static void sendHelp(FabricClientCommandSource source)
     {
-        ClientHelp.show("计算器", List.of(
-                new ClientHelp.Row("/pearlCannonCalc normal <名称> <x> <z> [最大tick]", "tick 模式"),
-                new ClientHelp.Row("/pearlCannonCalc plane <名称> <x> <z> <y> [最大tick]", "平面模式"),
-                new ClientHelp.Row("/pearlCannonCalc expand <序号>", "展开结果"),
-                new ClientHelp.Row("/pearlCannonCalc hud <序号|off>", "持续显示配置编码"),
-                new ClientHelp.Row("/pearlCannonCalc pull [名称]", "拉取配置"),
-                new ClientHelp.Row("/pearlCannonCalc list", "查看本地配置"),
-                new ClientHelp.Row("/pearlCannonConfig ...", "配置器（需要 OP）")));
+        ClientMessages.send(source, "d 珍珠炮 ", "g 计算器");
+        help(source, "/pearlCannonCalc normal <名称> <x> <z> [最大tick]", "tick 模式");
+        help(source, "/pearlCannonCalc plane <名称> <x> <z> <y> [最大tick]", "平面模式");
+        help(source, "/pearlCannonCalc expand <序号>", "展开结果");
+        help(source, "/pearlCannonCalc hud <序号|off>", "持续显示配置编码");
+        help(source, "/pearlCannonCalc pull [名称]", "拉取配置");
+        help(source, "/pearlCannonCalc list", "查看本地配置");
+    }
+
+    private static void help(FabricClientCommandSource source, String command, String description)
+    {
+        ClientMessages.send(source, "g   " + command, "^ " + description);
     }
 
     private static LiteralArgumentBuilder<FabricClientCommandSource> literal(String name)
