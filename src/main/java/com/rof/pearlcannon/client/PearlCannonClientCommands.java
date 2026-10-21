@@ -11,6 +11,7 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 import com.rof.pearlcannon.config.PearlCannonConfig;
 import com.rof.pearlcannon.net.PearlCannonPayloads;
+import com.rof.pearlcannon.util.Format;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.commands.SharedSuggestionProvider;
@@ -88,7 +89,7 @@ public final class PearlCannonClientCommands
         return literal("hud")
                 .executes(context ->
                 {
-                    ClientMessages.fail(context.getSource(), "r 用法：", "y /pearlCannonCalc hud <序号|off>");
+                    ClientMessages.fail(context.getSource(), "r 用法：", "g /pearlCannonCalc hud <序号|off>");
                     return 0;
                 })
                 .then(literal("off").executes(PearlCannonCalc::hideHud))
@@ -123,7 +124,7 @@ public final class PearlCannonClientCommands
         List<String> names = ClientCannonConfigs.names();
         if (names.isEmpty())
         {
-            ClientMessages.send(source, "d 珍珠炮 ", "g 本地还没有配置；执行 ", "y /pearlCannonCalc pull ", "w <名称>");
+            ClientMessages.send(source, "d 珍珠炮 ", "g 本地还没有配置；执行 ", "g /pearlCannonCalc pull ", "g <名称>");
             return;
         }
 
@@ -146,14 +147,19 @@ public final class PearlCannonClientCommands
 
     private static void sendHelp(FabricClientCommandSource source)
     {
-        ClientMessages.send(source, "d 珍珠炮 ", "g 计算器");
-        ClientMessages.send(source, "y  /pearlCannonCalc normal ", "w <名称> <x> <z> [最大tick]");
-        ClientMessages.send(source, "y  /pearlCannonCalc plane ", "w <名称> <x> <z> <y> [最大tick]");
-        ClientMessages.send(source, "y  /pearlCannonCalc expand ", "w <序号>");
-        ClientMessages.send(source, "y  /pearlCannonCalc hud ", "w <序号|off>", "g  持续显示配置编码");
-        ClientMessages.send(source, "y  /pearlCannonCalc pull ", "w [名称]", "g  从服务端拉取配置到本地");
-        ClientMessages.send(source, "y  /pearlCannonCalc list", "g  查看本地配置");
-        ClientMessages.send(source, "g  配置器：", "y /pearlCannonConfig ...", "g （需要 OP）");
+        ClientMessages.send(source, "d 珍珠炮 ", "g 计算器  ", "g /pearlCannonCalc <子命令>");
+        help(source, "normal <名称> <x> <z> [最大tick]", "tick 模式");
+        help(source, "plane <名称> <x> <z> <y> [最大tick]", "平面模式");
+        help(source, "expand <序号>", "展开结果");
+        help(source, "hud <序号|off>", "持续显示配置编码");
+        help(source, "pull [名称]", "拉取服务端配置");
+        help(source, "list", "查看本地配置");
+        ClientMessages.send(source, "g  配置器：", "g /pearlCannonConfig ...", "g （需要 OP）");
+    }
+
+    private static void help(FabricClientCommandSource source, String command, String description)
+    {
+        ClientMessages.send(source, "g   " + Format.padEnd(command, 37) + description);
     }
 
     private static LiteralArgumentBuilder<FabricClientCommandSource> literal(String name)

@@ -70,7 +70,7 @@
 
 &emsp;&emsp;- `/pearlCannonCalc plane <名称> <x> <z> <y> [最大tick] - 平面模式：以珍珠向下穿过高度 y 的平面作为落点，取命中那一 tick 开始时的传送坐标`
 
-&emsp;&emsp;- `/pearlCannonCalc expand <序号> - 展开某条计算结果的详细信息（含配置编码、红阵列、蓝阵列）`
+&emsp;&emsp;- `/pearlCannonCalc expand <序号> - 展开某条结果的详细信息（含配置编码、红阵列、蓝阵列）；配置编码按红/蓝/方向着色，可点 [复制] 或 [HUD]`
 
 &emsp;&emsp;- `/pearlCannonCalc hud <序号|off> - 把某条结果的配置编码持续显示在动作栏，off 关闭`
 

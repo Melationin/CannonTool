@@ -1,12 +1,12 @@
 package com.rof.pearlcannon.client;
 
 import com.rof.pearlcannon.net.PearlCannonPayloads;
-import com.rof.pearlcannon.util.Messages;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.minecraft.network.chat.Component;
 
 /** 客户端入口：注册本地命令、接收服务端下发的配置并写入本地文件夹。 */
 public class PearlCannonClient implements ClientModInitializer
@@ -41,12 +41,12 @@ public class PearlCannonClient implements ClientModInitializer
 
         ClientTickEvents.END_CLIENT_TICK.register(client ->
         {
-            String code = PearlCannonCalc.hudCode();
-            if (code == null || client.player == null) return;
+            Component display = PearlCannonCalc.hudDisplay();
+            if (display == null || client.player == null) return;
             //? >=26.2 {
-            /*client.gui.hud.setOverlayMessage(Messages.c("g 配置编码 ", "y " + code), false);
+            /*client.gui.hud.setOverlayMessage(display, false);
             *///?} else {
-            client.gui.setOverlayMessage(Messages.c("g 配置编码 ", "y " + code), false);
+            client.gui.setOverlayMessage(display, false);
             //?}
         });
 

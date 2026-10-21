@@ -70,7 +70,7 @@ Commands have two roots: `/pearlCannonConfig` runs on the server and requires OP
 
 &emsp;&emsp;- `/pearlCannonCalc plane <name> <x> <z> <y> [maxTicks] - Plane mode: land on the plane at height y and report the teleport position at the hit tick`
 
-&emsp;&emsp;- `/pearlCannonCalc expand <index> - Expand the details of one result (configuration code, red/blue arrays)`
+&emsp;&emsp;- `/pearlCannonCalc expand <index> - Expand the details of one result (configuration code, red/blue arrays); the code is colored by section and offers [Copy] / [HUD]`
 
 &emsp;&emsp;- `/pearlCannonCalc hud <index|off> - Keep a result's configuration code on the action bar; use off to hide it`
 

@@ -11,7 +11,9 @@ import com.rof.pearlcannon.solver.PearlCannonSolver;
 import com.rof.pearlcannon.util.Format;
 import com.rof.pearlcannon.util.Messages;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
+import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.HashMap;
@@ -26,22 +28,24 @@ public final class PearlCannonCalc
 
     private static final Map<UUID, LastResults> LAST_RESULTS = new HashMap<>();
 
-    private static String hudCode;
+    private static Component hudDisplay;
 
     private record LastResults(String configName, double targetX, double targetZ, double planeY, boolean plane,
                                int maxTicks, int maxTnt, List<PearlCannonSolver.Solution> solutions) {}
+
+    private record Code(boolean[] redBits, boolean[] blueBits, String text) {}
 
     private PearlCannonCalc() {}
 
     public static void resetState()
     {
         LAST_RESULTS.clear();
-        hudCode = null;
+        hudDisplay = null;
     }
 
-    public static String hudCode()
+    public static Component hudDisplay()
     {
-        return hudCode;
+        return hudDisplay;
     }
 
     public static int calculate(CommandContext<FabricClientCommandSource> context, boolean plane) throws CommandSyntaxException
@@ -51,7 +55,7 @@ public final class PearlCannonCalc
         PearlCannonConfig config = ClientCannonConfigs.get(name);
         if (config == null)
         {
-            ClientMessages.fail(source, "r 本地没有配置 " + name, "g  ；执行 ", "y /pearlCannonCalc pull ", "w " + name);
+            ClientMessages.fail(source, "r 本地没有配置 " + name, "g  ；执行 ", "g /pearlCannonCalc pull ", "g " + name);
             return 0;
         }
         if (!config.hasReference())
@@ -120,7 +124,7 @@ public final class PearlCannonCalc
         LastResults last = LAST_RESULTS.get(source.getPlayer().getUUID());
         if (last == null)
         {
-            ClientMessages.fail(source, "r 还没有计算结果，先执行 ", "y /pearlCannonCalc normal ", "w <名称> <x> <z>");
+            ClientMessages.fail(source, "r 还没有计算结果，先执行 ", "g /pearlCannonCalc normal ", "g <名称> <x> <z>");
             return 0;
         }
 
@@ -153,17 +157,15 @@ public final class PearlCannonCalc
                 "g （蓝 ", "w " + solution.blue(), "g  / 红 ", "w " + solution.red(), "g ）");
         ClientMessages.send(source, "g   初速度 ", "w " + Format.vec(velocity));
 
-        if (PearlCannonRom.configured(config.rom))
+        Code code = buildCode(config, solution);
+        if (code != null)
         {
-            boolean[] redBits = PearlCannonRom.decompose(config.rom.red, solution.red());
-            boolean[] blueBits = PearlCannonRom.decompose(config.rom.blue, solution.blue());
-            if (redBits != null && blueBits != null)
-            {
-                String code = PearlCannonRom.buildCode(config.rom.order, solution.group(), redBits, blueBits);
-                ClientMessages.send(source, "g   配置编码 ", "y " + code, "d   [复制]", "&" + code, "^ 点击复制配置编码");
-                ClientMessages.send(source, "g   红阵列 ", "w " + PearlCannonRom.describeBits(config.rom.red, redBits));
-                ClientMessages.send(source, "g   蓝阵列 ", "w " + PearlCannonRom.describeBits(config.rom.blue, blueBits));
-            }
+            MutableComponent colored = coloredCode(config.rom, solution.group(), code.redBits(), code.blueBits());
+            ClientMessages.send(source, "g   配置编码 ", colored,
+                    "g   ", "d [复制]", "&" + code.text(), "^ 点击复制配置编码",
+                    "g   ", "d [HUD]", "!/pearlCannonCalc hud " + index, "^ 点击显示在屏幕上");
+            ClientMessages.send(source, "g   红阵列 ", "r " + PearlCannonRom.describeBits(config.rom.red, code.redBits()));
+            ClientMessages.send(source, "g   蓝阵列 ", "c " + PearlCannonRom.describeBits(config.rom.blue, code.blueBits()));
         }
 
         ClientMessages.send(source, "g   落点 ", "w " + Format.vec(solution.end()),
@@ -196,38 +198,71 @@ public final class PearlCannonCalc
             return 0;
         }
 
-        String code = buildCode(config, last.solutions().get(index - 1));
+        PearlCannonSolver.Solution solution = last.solutions().get(index - 1);
+        Code code = buildCode(config, solution);
         if (code == null)
         {
             ClientMessages.fail(source, "r 无法生成配置编码（检查 ROM 配置）");
             return 0;
         }
 
-        hudCode = code;
-        ClientMessages.send(source, "d 珍珠炮 ", "g 显示配置编码 ", "y " + code);
+        hudDisplay = Messages.c("g 配置编码 ",
+                coloredCode(config.rom, solution.group(), code.redBits(), code.blueBits()));
+        ClientMessages.send(source, "d 珍珠炮 ", "g 已显示配置编码；关闭：", "g /pearlCannonCalc hud off",
+                "!/pearlCannonCalc hud off", "^ 点击关闭");
         return 1;
     }
 
     public static int hideHud(CommandContext<FabricClientCommandSource> context)
     {
         FabricClientCommandSource source = context.getSource();
-        if (hudCode == null)
+        if (hudDisplay == null)
         {
             ClientMessages.fail(source, "r 当前没有显示配置编码");
             return 0;
         }
-        hudCode = null;
+        hudDisplay = null;
         ClientMessages.send(source, "d 珍珠炮 ", "g 已隐藏配置编码");
         return 1;
     }
 
-    private static String buildCode(PearlCannonConfig config, PearlCannonSolver.Solution solution)
+    private static Code buildCode(PearlCannonConfig config, PearlCannonSolver.Solution solution)
     {
         if (!PearlCannonRom.configured(config.rom)) return null;
         boolean[] redBits = PearlCannonRom.decompose(config.rom.red, solution.red());
         boolean[] blueBits = PearlCannonRom.decompose(config.rom.blue, solution.blue());
         if (redBits == null || blueBits == null) return null;
-        return PearlCannonRom.buildCode(config.rom.order, solution.group(), redBits, blueBits);
+        String text = PearlCannonRom.buildCode(config.rom.order, solution.group(), redBits, blueBits);
+        return new Code(redBits, blueBits, text);
+    }
+
+    private static MutableComponent coloredCode(PearlCannonConfig.Rom rom, String direction,
+                                                boolean[] redBits, boolean[] blueBits)
+    {
+        MutableComponent code = Component.literal("");
+        String order = PearlCannonRom.normalizeOrder(rom.order);
+        if (order == null) return code;
+
+        for (char section : order.toCharArray())
+        {
+            switch (section)
+            {
+                case 'R' -> appendBits(code, redBits, ChatFormatting.RED);
+                case 'B' -> appendBits(code, blueBits, ChatFormatting.AQUA);
+                case 'D' -> code.append(Component.literal(direction).withStyle(ChatFormatting.WHITE));
+                default -> { }
+            }
+        }
+        return code;
+    }
+
+    private static void appendBits(MutableComponent code, boolean[] bits, ChatFormatting color)
+    {
+        if (bits == null) return;
+        for (boolean bit : bits)
+        {
+            code.append(Component.literal(bit ? "1" : "0").withStyle(color));
+        }
     }
 
     private static int maxTicks(CommandContext<FabricClientCommandSource> context)

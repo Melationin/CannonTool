@@ -124,7 +124,7 @@ public final class PearlCannonConfigCommands
                     String name = PearlCalibration.sessionName(player.getUUID());
                     if (name == null)
                     {
-                        Messages.fail(context.getSource(), "r 请先执行 ", "y /pearlCannonConfig start ", "w <名称>");
+                        Messages.fail(context.getSource(), "r 请先执行 ", "g /pearlCannonConfig start ", "g <名称>");
                         return 0;
                     }
                     PearlCalibration.resetTick(player, name);
@@ -192,7 +192,7 @@ public final class PearlCannonConfigCommands
         String name = PearlCalibration.sessionName(player.getUUID());
         if (name == null)
         {
-            Messages.fail(source, "r 请先执行 ", "y /pearlCannonConfig start ", "w <名称>");
+            Messages.fail(source, "r 请先执行 ", "g /pearlCannonConfig start ", "g <名称>");
             return null;
         }
         PearlCannonConfig config = PearlCannonConfigs.get(name);
@@ -287,7 +287,7 @@ public final class PearlCannonConfigCommands
         String order = PearlCannonRom.normalizeOrder(StringArgumentType.getString(context, "order"));
         if (order == null)
         {
-            Messages.fail(source, "r 顺序必须是 ", "y " + String.join("/", PearlCannonRom.ORDERS), "r 之一");
+            Messages.fail(source, "r 顺序必须是 ", "g " + String.join("/", PearlCannonRom.ORDERS), "r 之一");
             return 0;
         }
 
@@ -336,9 +336,9 @@ public final class PearlCannonConfigCommands
         if (!PearlCannonRom.configured(config.rom))
         {
             Messages.send(source, "r 未配置完整：需要顺序 + 红权重 + 蓝权重");
-            Messages.send(source, "y  /pearlCannonConfig rom order ", "w <" + String.join("|", PearlCannonRom.ORDERS) + ">");
-            Messages.send(source, "y  /pearlCannonConfig rom red ", "w <w1,w2,...>");
-            Messages.send(source, "y  /pearlCannonConfig rom blue ", "w <w1,w2,...>");
+            Messages.send(source, "g  /pearlCannonConfig rom order <" + String.join("|", PearlCannonRom.ORDERS) + ">");
+            Messages.send(source, "g  /pearlCannonConfig rom red <w1,w2,...>");
+            Messages.send(source, "g  /pearlCannonConfig rom blue <w1,w2,...>");
             return;
         }
 
@@ -373,7 +373,7 @@ public final class PearlCannonConfigCommands
         }
         else
         {
-            Messages.fail(source, "r 类型必须是 ", "y ender_pearl", "r 或 ", "y snowball");
+            Messages.fail(source, "r 类型必须是 ", "g ender_pearl", "r 或 ", "g snowball");
             return 0;
         }
 
@@ -425,14 +425,24 @@ public final class PearlCannonConfigCommands
 
     private static void sendHelp(CommandSourceStack source)
     {
-        Messages.send(source, "d 珍珠炮 ", "g 配置器");
-        Messages.send(source, "y  /pearlCannonConfig start ", "w <名称>", "g  开始配置");
-        Messages.send(source, "y  /pearlCannonConfig stop", "g  / ", "y list", "g  / ", "y info", "g  / ", "y delete ", "w <名称>");
-        Messages.send(source, "y  /pearlCannonConfig maxTnt ", "w <数量>", "g  设置最大单侧药量");
-        Messages.send(source, "y  /pearlCannonConfig rom order ", "w <RBD|RDB|BRD|BDR|DRB|DBR>");
-        Messages.send(source, "y  /pearlCannonConfig rom red|blue ", "w <w1,w2,...>");
-        Messages.send(source, "y  /pearlCannonConfig rom red|blue inverse ", "w <w1,w2,...>");
-        Messages.send(source, "y  /pearlCannonConfig rom show", "g  / ", "y resetTick");
-        Messages.send(source, "y  /pearlCannonConfig give ", "w [ender_pearl|snowball]");
+        Messages.send(source, "d 珍珠炮 ", "g 配置器  ", "g /pearlCannonConfig <子命令>");
+        help(source, "start <名称>", "开始配置");
+        help(source, "stop", "结束配置");
+        help(source, "list", "列出配置");
+        help(source, "info", "查看当前配置");
+        help(source, "delete <名称>", "删除配置");
+        help(source, "maxTnt <数量>", "最大单侧药量");
+        help(source, "resetTick", "清空基准与样本");
+        help(source, "selectTick <tick>", "选择基准 tick");
+        help(source, "give [ender_pearl|snowball]", "发放标定投掷物");
+        help(source, "rom order <顺序>", "ROM 三段顺序");
+        help(source, "rom red|blue <w1,w2,...>", "红/蓝权重");
+        help(source, "rom red|blue inverse <w1,w2,...>", "红/蓝权重（镜像）");
+        help(source, "rom show", "查看 ROM");
+    }
+
+    private static void help(CommandSourceStack source, String command, String description)
+    {
+        Messages.send(source, "g   " + Format.padEnd(command, 37) + description);
     }
 }
