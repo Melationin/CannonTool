@@ -1,0 +1,117 @@
+buildscript {
+	repositories {
+		maven { url 'https://maven.aliyun.com/repository/public' }
+		maven { name = 'Fabric'; url = 'https://maven.fabricmc.net/' }
+		mavenCentral()
+		gradlePluginPortal()
+	}
+	dependencies {
+		classpath "net.fabricmc:fabric-loom:1.15.5"
+	}
+}
+
+plugins {
+	id 'maven-publish'
+}
+
+def minecraftVer = stonecutter.current.version
+version = project.mod_version
+
+if (stonecutter.eval(minecraftVer, ">=26.1")) {
+	apply plugin: 'net.fabricmc.fabric-loom'
+} else {
+	apply plugin: 'net.fabricmc.fabric-loom-remap'
+}
+
+base {
+	archivesName = "${project.archives_base_name}-${minecraftVer}"
+}
+
+repositories {
+	maven { url = 'https://maven.fabricmc.net/' }
+	maven { url = 'https://api.modrinth.com/maven' }
+	maven { url = 'https://repo1.maven.org/maven2' }
+	mavenCentral()
+}
+
+stonecutter {
+	// 1.21.11 moved ThrownEnderpearl / ThrowableItemProjectile into the throwableitemprojectile
+	// subpackage; every older node still uses the flat projectile package.
+	replacements.string(current.parsed < "1.21.11") {
+		replace(
+				"net.minecraft.world.entity.projectile.throwableitemprojectile.ThrownEnderpearl",
+				"net.minecraft.world.entity.projectile.ThrownEnderpearl"
+		)
+		replace(
+				"net.minecraft.world.entity.projectile.throwableitemprojectile.ThrowableItemProjectile",
+				"net.minecraft.world.entity.projectile.ThrowableItemProjectile"
+		)
+		// the same classes appear as mixin @At descriptors (slash form)
+		replace(
+				"Lnet/minecraft/world/entity/projectile/throwableitemprojectile/ThrownEnderpearl;",
+				"Lnet/minecraft/world/entity/projectile/ThrownEnderpearl;"
+		)
+		replace(
+				"Lnet/minecraft/world/entity/projectile/throwableitemprojectile/ThrowableItemProjectile;",
+				"Lnet/minecraft/world/entity/projectile/ThrowableItemProjectile;"
+		)
+	}
+}
+
+loom {
+	runConfigs.all {
+		ideConfigGenerated true
+		runDir "../../run"
+	}
+}
+
+dependencies {
+	minecraft "com.mojang:minecraft:${stonecutter.current.project}"
+
+	if (stonecutter.eval(minecraftVer, ">=26.1")) {
+		implementation "net.fabricmc:fabric-loader:${property("loader_version")}"
+		implementation "net.fabricmc.fabric-api:fabric-api:${property("fabric_api_version")}"
+	} else {
+		mappings loom.officialMojangMappings()
+		modImplementation "net.fabricmc:fabric-loader:${property("loader_version")}"
+		modImplementation "net.fabricmc.fabric-api:fabric-api:${property("fabric_api_version")}"
+	}
+}
+
+processResources {
+	inputs.property "minecraft", stonecutter.current.version
+
+	filesMatching("fabric.mod.json") {
+		expand([
+				"minecraftVer": project.findProperty("minecraft_ver") ?: stonecutter.current.version,
+				"modVer"      : mod_version
+		])
+	}
+}
+
+def javaVersion = stonecutter.eval(minecraftVer, ">=26.1") ? JavaVersion.VERSION_25 : JavaVersion.VERSION_21
+
+java {
+	sourceCompatibility = javaVersion
+	targetCompatibility = javaVersion
+}
+
+jar {
+	inputs.property "archivesName", "${project.base.archivesName}-${minecraftVer}"
+
+	from("LICENSE") {
+		rename { "${it}_${inputs.properties.archivesName}" }
+	}
+}
+
+publishing {
+	publications {
+		create("mavenJava", MavenPublication) {
+			artifactId = project.archives_base_name
+			from components.java
+		}
+	}
+
+	repositories {
+	}
+}

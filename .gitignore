@@ -1,0 +1,29 @@
+# gradle
+.gradle/
+build/
+versions/*/build/
+
+# idea
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# vscode
+.settings/
+.vscode/
+bin/
+.classpath
+.project
+
+# macos
+*.DS_Store
+
+# fabric
+run/
+versions/*/run/
+remappedSrc/
+
+# local agent artifacts
+.dsh-acl-reports/
+.dsh-tmp*/

@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "id": "pearlcannon",
+  "version": "${modVer}",
+
+  "name": "Pearl Cannon Calculator",
+  "description": "In-game ender pearl cannon calibration and firing-solution calculator.",
+  "authors": [
+    "Zhddsj"
+  ],
+  "license": "MIT",
+
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.rof.pearlcannon.PearlCannon"
+    ],
+    "client": [
+      "com.rof.pearlcannon.client.PearlCannonClient"
+    ]
+  },
+  "mixins": [
+    "pearlcannon.mixins.json"
+  ],
+
+  "depends": {
+    "minecraft": "${minecraftVer}",
+    "fabricloader": ">=0.18.0",
+    "fabric-api": "*"
+  }
+}

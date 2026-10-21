@@ -1,0 +1,156 @@
+package com.rof.pearlcannon.client;
+
+import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.ArgumentType;
+import com.mojang.brigadier.arguments.DoubleArgumentType;
+import com.mojang.brigadier.arguments.IntegerArgumentType;
+import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.mojang.brigadier.builder.RequiredArgumentBuilder;
+import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.suggestion.SuggestionProvider;
+import com.rof.pearlcannon.config.PearlCannonConfig;
+import com.rof.pearlcannon.net.PearlCannonPayloads;
+import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.minecraft.commands.SharedSuggestionProvider;
+
+import java.util.List;
+
+/**
+ * 客户端命令：计算、本地配置列表与拉取。
+ * <p>服务端配置命令是独立的 /pearlCannonConfig，客户端不再需要转发。</p>
+ */
+public final class PearlCannonClientCommands
+{
+    private static final SuggestionProvider<FabricClientCommandSource> CONFIG_SUGGESTIONS =
+            (context, builder) -> SharedSuggestionProvider.suggest(ClientCannonConfigs.names(), builder);
+
+    private PearlCannonClientCommands() {}
+
+    public static void register(CommandDispatcher<FabricClientCommandSource> dispatcher)
+    {
+        LiteralArgumentBuilder<FabricClientCommandSource> root = literal("pearlCannonCalc")
+                .executes(context ->
+                {
+                    sendHelp(context.getSource());
+                    return 1;
+                });
+
+        root.then(normalCommand());
+        root.then(planeCommand());
+        root.then(expandCommand());
+        root.then(pullCommand());
+        root.then(literal("list").executes(context ->
+        {
+            listConfigs(context.getSource());
+            return 1;
+        }));
+
+        dispatcher.register(root);
+    }
+
+    private static LiteralArgumentBuilder<FabricClientCommandSource> normalCommand()
+    {
+        return literal("normal")
+                .then(argument("name", StringArgumentType.word())
+                        .suggests(CONFIG_SUGGESTIONS)
+                        .then(argument("x", DoubleArgumentType.doubleArg())
+                                .then(argument("z", DoubleArgumentType.doubleArg())
+                                        .executes(context -> PearlCannonCalc.calculate(context, false))
+                                        .then(argument("maxTicks", IntegerArgumentType.integer(1))
+                                                .executes(context -> PearlCannonCalc.calculate(context, false))))));
+    }
+
+    private static LiteralArgumentBuilder<FabricClientCommandSource> planeCommand()
+    {
+        return literal("plane")
+                .then(argument("name", StringArgumentType.word())
+                        .suggests(CONFIG_SUGGESTIONS)
+                        .then(argument("x", DoubleArgumentType.doubleArg())
+                                .then(argument("z", DoubleArgumentType.doubleArg())
+                                        .then(argument("y", DoubleArgumentType.doubleArg())
+                                                .executes(context -> PearlCannonCalc.calculate(context, true))
+                                                .then(argument("maxTicks", IntegerArgumentType.integer(1))
+                                                        .executes(context -> PearlCannonCalc.calculate(context, true)))))));
+    }
+
+    private static LiteralArgumentBuilder<FabricClientCommandSource> expandCommand()
+    {
+        return literal("expand")
+                .then(argument("index", IntegerArgumentType.integer(1))
+                        .executes(PearlCannonCalc::expand));
+    }
+
+    private static LiteralArgumentBuilder<FabricClientCommandSource> pullCommand()
+    {
+        return literal("pull")
+                .executes(context -> pull(context, ""))
+                .then(argument("name", StringArgumentType.word())
+                        .executes(context -> pull(context, StringArgumentType.getString(context, "name"))));
+    }
+
+    private static int pull(CommandContext<FabricClientCommandSource> context, String name)
+    {
+        FabricClientCommandSource source = context.getSource();
+        if (!ClientPlayNetworking.canSend(PearlCannonPayloads.PullRequestPayload.TYPE))
+        {
+            ClientMessages.fail(source, "r 当前服务器没有安装珍珠炮服务端，无法拉取配置");
+            return 0;
+        }
+
+        ClientPlayNetworking.send(new PearlCannonPayloads.PullRequestPayload(name));
+        ClientMessages.send(source, "d 珍珠炮 ", "g 正在从服务端拉取 ", "w " + (name.isEmpty() ? "全部配置" : name));
+        return 1;
+    }
+
+    private static void listConfigs(FabricClientCommandSource source)
+    {
+        List<String> names = ClientCannonConfigs.names();
+        if (names.isEmpty())
+        {
+            ClientMessages.send(source, "d 珍珠炮 ", "g 本地还没有配置；执行 ", "y /pearlCannonCalc pull <名称>",
+                    "g  从服务端拉取，或把 json 放进 ", "f " + ClientCannonConfigs.directory());
+            return;
+        }
+
+        ClientMessages.send(source, "d 珍珠炮 ", "g 本地配置 ", "w " + names.size(),
+                "g  个（", "f " + ClientCannonConfigs.directory(), "g ）");
+        for (String name : names)
+        {
+            PearlCannonConfig config = ClientCannonConfigs.get(name);
+            if (config == null)
+            {
+                ClientMessages.send(source, "g  - ", "w " + name, "r   读取失败");
+                continue;
+            }
+            String tick = config.hasReference() ? String.valueOf(config.reference.tick) : "未选";
+            ClientMessages.send(source, "g  - ", "w " + name,
+                    "g   基准 tick ", "y " + tick,
+                    "g   样本 ", "y " + config.samples.size(),
+                    config.hasEmpty() ? "g   含空配置" : "");
+        }
+    }
+
+    private static void sendHelp(FabricClientCommandSource source)
+    {
+        ClientMessages.send(source, "d 珍珠炮 ", "g 客户端计算（配置在本地）");
+        ClientMessages.send(source, "g  /pearlCannonCalc normal ", "y <名称> <x> <z> [最大tick]");
+        ClientMessages.send(source, "g  /pearlCannonCalc plane ", "y <名称> <x> <z> <y> [最大tick]");
+        ClientMessages.send(source, "g  /pearlCannonCalc expand ", "y <序号>");
+        ClientMessages.send(source, "g  /pearlCannonCalc pull ", "y [名称]", "g  从服务端拉取配置到本地");
+        ClientMessages.send(source, "g  /pearlCannonCalc list", "g  查看本地配置");
+        ClientMessages.send(source, "g  服务端配置命令：", "y /pearlCannonConfig ...", "g （需要 OP）");
+        ClientMessages.send(source, "f  本地配置目录: " + ClientCannonConfigs.directory());
+    }
+
+    private static LiteralArgumentBuilder<FabricClientCommandSource> literal(String name)
+    {
+        return LiteralArgumentBuilder.literal(name);
+    }
+
+    private static <T> RequiredArgumentBuilder<FabricClientCommandSource, T> argument(String name, ArgumentType<T> type)
+    {
+        return RequiredArgumentBuilder.argument(name, type);
+    }
+}
