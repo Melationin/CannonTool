@@ -170,7 +170,6 @@ public final class PearlCalibration
         config.reference.tick = tick;
         config.reference.pos = PearlCannonConfig.Vec.of(sample.pos());
         config.reference.motionBefore = PearlCannonConfig.Vec.of(sample.motionBefore());
-        config.reference.motionAfter = PearlCannonConfig.Vec.of(sample.motionAfter());
         config.samples.put(pending.key(), toConfigSample(sample));
         PearlCannonConfigs.save(pending.configName());
         PENDING.remove(player.getUUID());

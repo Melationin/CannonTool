@@ -205,15 +205,14 @@ public final class PearlCannonConfigCommands
 
         Messages.send(source, "d 珍珠炮 ", "g 配置 ", "w " + active.name());
         Messages.send(source, "g 维度 ", "w " + (config.dimension.isEmpty() ? "未知" : config.dimension),
-                "g   原点 ", "w " + Format.vec(config.origin.toVec3()),
-                "g   最大单侧药量 ", "w " + (config.maxTnt <= 0 ? "不限" : String.valueOf(config.maxTnt)));
+                "g   原点 ", "w " + Format.vec(config.origin.toVec3()));
+        Messages.send(source, "g 最大单侧药量 ", "w " + (config.maxTnt <= 0 ? "不限" : String.valueOf(config.maxTnt)));
 
         if (config.hasReference())
         {
-            Messages.send(source, "g 基准 tick ", "w " + config.reference.tick,
-                    "g   相对位置 ", "w " + Format.vec(config.reference.pos.toVec3()),
-                    "g   冲量前动量 ", "w " + Format.vec(config.reference.motionBefore.toVec3()),
-                    "g   冲量后动量 ", "w " + Format.vec(config.reference.motionAfter.toVec3()));
+            Messages.send(source, "g 基准 tick ", "w " + config.reference.tick);
+            Messages.send(source, "g   相对位置 ", "w " + Format.vec(config.reference.pos.toVec3()));
+            Messages.send(source, "g   冲量前动量 ", "w " + Format.vec(config.reference.motionBefore.toVec3()));
         }
         else
         {
@@ -237,8 +236,7 @@ public final class PearlCannonConfigCommands
         }
         else
         {
-            Messages.send(source, "g  空配置 ", "w Δv=" + Format.vec(empty.delta.toVec3()),
-                    "g    冲量后动量 ", "w " + Format.vec(empty.motionAfter.toVec3()));
+            Messages.send(source, "g  空配置 ", "w Δv=" + Format.vec(empty.delta.toVec3()));
         }
 
         if (PearlCannonRom.configured(config.rom))

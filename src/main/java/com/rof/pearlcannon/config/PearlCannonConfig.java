@@ -78,19 +78,17 @@ public class PearlCannonConfig
         }
     }
 
-    /** 基准 tick 的珍珠状态：pos 相对原点，motionBefore 为冲量施加前，motionAfter 为该 tick 开头（含冲量）。 */
+    /** 基准 tick 的珍珠状态：pos 相对原点，motionBefore 为冲量施加前。 */
     public static class Reference
     {
         public int tick = 0;
         public Vec pos = new Vec();
         public Vec motionBefore = new Vec();
-        public Vec motionAfter = new Vec();
 
         private void normalize()
         {
             if (pos == null) pos = new Vec();
             if (motionBefore == null) motionBefore = new Vec();
-            if (motionAfter == null) motionAfter = new Vec();
         }
     }
 
