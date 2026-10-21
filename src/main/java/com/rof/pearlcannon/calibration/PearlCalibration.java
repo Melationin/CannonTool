@@ -189,17 +189,27 @@ public final class PearlCalibration
         }
 
         player.sendSystemMessage(header("配置 " + configName
-                + " · tick " + (config.hasReference() ? String.valueOf(config.reference.tick) : "未选")
-                + " · 药量 " + (config.maxTnt <= 0 ? "不限" : String.valueOf(config.maxTnt))
-                + " · ROM " + (PearlCannonRom.configured(config.rom) ? config.rom.order : "未配置")));
+                + " · tick " + (config.hasReference() ? String.valueOf(config.reference.tick) : "未选")));
+        player.sendSystemMessage(Component.literal("  药量 " + (config.maxTnt <= 0 ? "不限" : String.valueOf(config.maxTnt))
+                        + " · ROM " + (PearlCannonRom.configured(config.rom) ? config.rom.order : "未配置"))
+                .withStyle(ChatFormatting.GRAY));
 
         List<String> missing = new ArrayList<>();
-        MutableComponent status = Component.literal("  ").withStyle(ChatFormatting.GRAY);
-        boolean first = true;
-        for (String direction : PearlCannonConfig.DIRECTIONS)
+        List<MutableComponent> statusLines = new ArrayList<>();
+        MutableComponent status = null;
+        for (int index = 0; index < PearlCannonConfig.DIRECTIONS.length; index++)
         {
-            if (!first) status.append(Component.literal(" ").withStyle(ChatFormatting.GRAY));
-            first = false;
+            if (index % 2 == 0)
+            {
+                status = Component.literal("  ").withStyle(ChatFormatting.GRAY);
+                statusLines.add(status);
+            }
+            else
+            {
+                status.append(Component.literal("    ").withStyle(ChatFormatting.GRAY));
+            }
+
+            String direction = PearlCannonConfig.DIRECTIONS[index];
             status.append(Component.literal(direction + " ").withStyle(ChatFormatting.GRAY));
             for (String color : PearlCannonConfig.COLORS)
             {
@@ -210,15 +220,14 @@ public final class PearlCalibration
                         .withStyle(present ? ChatFormatting.GREEN : ChatFormatting.RED));
             }
         }
-        player.sendSystemMessage(status);
+        for (MutableComponent line : statusLines) player.sendSystemMessage(line);
 
-        MutableComponent tail = Component.literal("  空 ZZ " + (config.hasEmpty() ? "✔" : "✘"))
-                .withStyle(config.hasEmpty() ? ChatFormatting.GREEN : ChatFormatting.DARK_GRAY);
+        player.sendSystemMessage(Component.literal("  空 ZZ " + (config.hasEmpty() ? "✔" : "✘"))
+                .withStyle(config.hasEmpty() ? ChatFormatting.GREEN : ChatFormatting.DARK_GRAY));
         if (!missing.isEmpty())
         {
-            tail.append(Component.literal("  还缺 " + String.join(" ", missing)).withStyle(ChatFormatting.YELLOW));
+            player.sendSystemMessage(Component.literal("  还缺 " + String.join(" ", missing)).withStyle(ChatFormatting.YELLOW));
         }
-        player.sendSystemMessage(tail);
     }
 
     public static void resetTick(ServerPlayer player, String configName)
