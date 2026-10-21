@@ -40,14 +40,14 @@ public final class ServerConfigShare
 
         if (!ServerPlayNetworking.canSend(player, PearlCannonPayloads.ConfigPayload.TYPE))
         {
-            player.sendSystemMessage(prefix("客户端没有安装珍珠炮，无法接收配置", ChatFormatting.RED));
+            player.sendSystemMessage(prefix("客户端未安装珍珠炮", ChatFormatting.RED));
             return;
         }
 
         if (names.isEmpty())
         {
             ServerPlayNetworking.send(player, new PearlCannonPayloads.PullResultPayload(0,
-                    name.isEmpty() ? "服务端还没有任何配置" : "配置 " + name + " 不存在"));
+                    name.isEmpty() ? "没有配置" : "配置 " + name + " 不存在"));
             return;
         }
 

@@ -43,8 +43,7 @@ public final class PearlCannonCalc
         PearlCannonConfig config = ClientCannonConfigs.get(name);
         if (config == null)
         {
-            ClientMessages.fail(source, "r 本地没有配置 " + name, "g  ；执行 ", "y /pearlCannonCalc pull ", "w " + name,
-                    "g  拉取，或把 json 放进 ", "f " + ClientCannonConfigs.directory());
+            ClientMessages.fail(source, "r 本地没有配置 " + name, "g  ；执行 ", "y /pearlCannonCalc pull ", "w " + name);
             return 0;
         }
         if (!config.hasReference())
@@ -184,7 +183,7 @@ public final class PearlCannonCalc
         if (plane)
         {
             ClientMessages.send(source, "g 平面 y ", "y " + Format.f3(planeY), "g  ，tick 上限 ", "y " + maxTicks,
-                    "g  ；可尝试调整平面高度、放宽药量上限或增大 tick 上限");
+                    "g  ；可调整平面高度或上限");
         }
         else
         {
@@ -218,13 +217,12 @@ public final class PearlCannonCalc
 
         if (!anyUsable)
         {
-            ClientMessages.send(source, "y 四组的蓝/红水平向量都相同或接近平行，无法组合出任意水平方向。"
-                    + "常见原因是基准 tick 选在了每次都会出现的公共推力上，请 resetTick 后改选阵列推力发生的 tick。");
+            ClientMessages.send(source, "y 蓝/红向量平行，无法组合方向；请 resetTick 后重选基准 tick");
         }
 
         if (allSamplesIdentical(config))
         {
-            ClientMessages.send(source, "y 样本的 Δv 完全相同，说明这几次标定测到的是同一份推力，请确认每次测量时炮的阵列确实切换了。");
+            ClientMessages.send(source, "y 样本 Δv 相同，请确认每次阵列都已切换");
         }
     }
 

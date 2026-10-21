@@ -65,8 +65,7 @@ public final class PearlCannonConfigCommands
                             String name = StringArgumentType.getString(context, "name");
                             if (!ConfigNames.isValid(name))
                             {
-                                Messages.fail(context.getSource(), "r 配置名不能包含 / \\ : * ? \" < > | 等字符，"
-                                        + "也不能是 . 或系统保留名");
+                                Messages.fail(context.getSource(), "r 配置名无效（不能含 / \\ : * ? \" < > |）");
                                 return 0;
                             }
                             PearlCalibration.startSession(player, name);
@@ -234,7 +233,7 @@ public final class PearlCannonConfigCommands
         PearlCannonConfig.Sample empty = config.sample(PearlCannonConfig.EMPTY_KEY);
         if (empty == null)
         {
-            Messages.send(source, "g  空配置 ", "f 未记录（默认冲量为 0）");
+            Messages.send(source, "g  空配置 ", "f 未记录");
         }
         else
         {
@@ -372,7 +371,7 @@ public final class PearlCannonConfigCommands
         Messages.send(source, "d 珍珠炮 ", "g 已发放 ", "w " + count, "g  颗标定珍珠（配置 ", "w " + name, "g ）");
         if (!active.config().hasReference())
         {
-            Messages.send(source, "g 第一颗珍珠结束后需要在聊天栏选择一个基准 tick");
+            Messages.send(source, "g 第一颗珍珠后选择基准 tick");
         }
         return 1;
     }

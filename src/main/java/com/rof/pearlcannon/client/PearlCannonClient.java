@@ -19,13 +19,9 @@ public class PearlCannonClient implements ClientModInitializer
 
         ClientPlayNetworking.registerGlobalReceiver(PearlCannonPayloads.ConfigPayload.TYPE, (payload, context) ->
         {
-            if (ClientCannonConfigs.save(payload.name(), payload.json()))
+            if (!ClientCannonConfigs.save(payload.name(), payload.json()))
             {
-                ClientMessages.send("d 珍珠炮 ", "l 已保存本地配置 ", "w " + payload.name());
-            }
-            else
-            {
-                ClientMessages.send("d 珍珠炮 ", "r 配置 " + payload.name() + " 保存失败（名称或 json 无效）");
+                ClientMessages.send("d 珍珠炮 ", "r 保存配置 " + payload.name() + " 失败");
             }
         });
 
@@ -37,7 +33,7 @@ public class PearlCannonClient implements ClientModInitializer
             }
             else
             {
-                ClientMessages.send("d 珍珠炮 ", "l 已拉取 ", "w " + payload.count(), "l 个配置到本地");
+                ClientMessages.send("d 珍珠炮 ", "l 已拉取 ", "w " + payload.count(), "l 个配置");
             }
         });
 

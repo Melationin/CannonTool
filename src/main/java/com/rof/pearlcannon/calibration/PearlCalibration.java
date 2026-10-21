@@ -65,15 +65,11 @@ public final class PearlCalibration
         PENDING.remove(player.getUUID());
 
         player.sendSystemMessage(header("开始配置 " + configName));
-        player.sendSystemMessage(Component.literal("请投掷命名为 " + configName + ":样本名 的珍珠，样本名为 00B/00R/01B/01R/10B/10R/11B/11R。")
+        player.sendSystemMessage(Component.literal("投掷命名为 " + configName + ":样本名 的珍珠（00B~11R，ZZ 为空配置）")
                 .withStyle(ChatFormatting.GRAY));
-        player.sendSystemMessage(Component.literal("空配置用 " + configName + ":ZZ 测量；不测量时默认空配置冲量为 0。")
-                .withStyle(ChatFormatting.DARK_GRAY));
-        player.sendSystemMessage(Component.literal("标定完成后，在客户端执行 /pearlCannonCalc pull " + configName + " 同步到本地。")
-                .withStyle(ChatFormatting.DARK_GRAY));
         if (!config.hasReference())
         {
-            player.sendSystemMessage(Component.literal("第一颗珍珠结束后需要选择一个基准 tick。").withStyle(ChatFormatting.GOLD));
+            player.sendSystemMessage(Component.literal("第一颗珍珠后选择基准 tick").withStyle(ChatFormatting.GOLD));
         }
         sendProgress(player, configName);
     }
@@ -128,7 +124,7 @@ public final class PearlCalibration
         if (config != null && config.dimension != null && !config.dimension.isEmpty()
                 && !config.dimension.equals(dimension))
         {
-            player.sendSystemMessage(warn("珍珠所在维度与配置 " + configName + " 不一致（" + dimension + "），本次测量被忽略"));
+            player.sendSystemMessage(warn("配置 " + configName + " 维度不一致（" + dimension + "），已忽略"));
             return null;
         }
 
@@ -192,37 +188,37 @@ public final class PearlCalibration
             return;
         }
 
-        player.sendSystemMessage(header("配置 " + configName + " · 基准 tick "
-                + (config.hasReference() ? String.valueOf(config.reference.tick) : "未选择")));
-        player.sendSystemMessage(Component.literal("  最大单侧药量: "
-                        + (config.maxTnt <= 0 ? "不限" : String.valueOf(config.maxTnt))
-                        + "  ·  ROM: " + (PearlCannonRom.configured(config.rom) ? config.rom.order : "未配置"))
-                .withStyle(ChatFormatting.GRAY));
+        player.sendSystemMessage(header("配置 " + configName
+                + " · tick " + (config.hasReference() ? String.valueOf(config.reference.tick) : "未选")
+                + " · 药量 " + (config.maxTnt <= 0 ? "不限" : String.valueOf(config.maxTnt))
+                + " · ROM " + (PearlCannonRom.configured(config.rom) ? config.rom.order : "未配置")));
 
         List<String> missing = new ArrayList<>();
+        MutableComponent status = Component.literal("  ").withStyle(ChatFormatting.GRAY);
+        boolean first = true;
         for (String direction : PearlCannonConfig.DIRECTIONS)
         {
-            MutableComponent line = Component.literal("  " + direction + ": ")
-                    .withStyle(ChatFormatting.GRAY);
+            if (!first) status.append(Component.literal(" ").withStyle(ChatFormatting.GRAY));
+            first = false;
+            status.append(Component.literal(direction + " ").withStyle(ChatFormatting.GRAY));
             for (String color : PearlCannonConfig.COLORS)
             {
                 String key = direction + color;
                 boolean present = config.hasSample(key);
                 if (!present) missing.add(key);
-                line.append(Component.literal((color.equals("B") ? "蓝" : "红") + (present ? "✔ " : "✘ "))
+                status.append(Component.literal((color.equals("B") ? "蓝" : "红") + (present ? "✔ " : "✘ "))
                         .withStyle(present ? ChatFormatting.GREEN : ChatFormatting.RED));
             }
-            player.sendSystemMessage(line);
         }
+        player.sendSystemMessage(status);
 
-        boolean empty = config.hasEmpty();
-        player.sendSystemMessage(Component.literal("  空配置 ZZ: " + (empty ? "已记录" : "未记录（默认冲量为 0）"))
-                .withStyle(empty ? ChatFormatting.GREEN : ChatFormatting.DARK_GRAY));
-
+        MutableComponent tail = Component.literal("  空 ZZ " + (config.hasEmpty() ? "✔" : "✘"))
+                .withStyle(config.hasEmpty() ? ChatFormatting.GREEN : ChatFormatting.DARK_GRAY);
         if (!missing.isEmpty())
         {
-            player.sendSystemMessage(Component.literal("  还缺: " + String.join(", ", missing)).withStyle(ChatFormatting.YELLOW));
+            tail.append(Component.literal("  还缺 " + String.join(" ", missing)).withStyle(ChatFormatting.YELLOW));
         }
+        player.sendSystemMessage(tail);
     }
 
     public static void resetTick(ServerPlayer player, String configName)
@@ -236,7 +232,7 @@ public final class PearlCalibration
         config.reference = new PearlCannonConfig.Reference();
         config.samples.clear();
         PearlCannonConfigs.save(configName);
-        player.sendSystemMessage(ok("已清空配置 " + configName + " 的基准 tick 与全部样本，下一颗珍珠将重新选择基准 tick"));
+        player.sendSystemMessage(ok("已清空 " + configName + " 的基准 tick 与样本"));
     }
 
     private static PearlCannonConfig.Sample toConfigSample(TickSample sample)
@@ -370,7 +366,7 @@ public final class PearlCalibration
             PearlCannonConfig config = PearlCannonConfigs.get(configName);
             if (config == null)
             {
-                send(server, ownerId, warn("配置 " + configName + " 已不存在，本次测量被丢弃"));
+                send(server, ownerId, warn("配置 " + configName + " 不存在，测量已丢弃"));
                 return;
             }
 
@@ -378,7 +374,7 @@ public final class PearlCalibration
             {
                 if (samples.isEmpty())
                 {
-                    send(server, ownerId, warn("未检测到任何动量变化（请确认推进 TNT 已引爆、珍珠名称正确）"));
+                    send(server, ownerId, warn("未检测到动量变化"));
                     return;
                 }
                 boolean replaced = PENDING.put(ownerId,
@@ -386,14 +382,14 @@ public final class PearlCalibration
                 if (replaced)
                 {
                     send(server, ownerId, Component.literal("[珍珠炮] ").withStyle(ChatFormatting.GOLD)
-                            .append(Component.literal("已用本次测量替换上一次待选择的记录").withStyle(ChatFormatting.YELLOW)));
+                            .append(Component.literal("已替换上一次待选记录").withStyle(ChatFormatting.YELLOW)));
                 }
                 sendSelectionList();
                 return;
             }
 
-            send(server, ownerId, warn("珍珠在到达基准 tick " + config.reference.tick
-                    + " 之前消失（最后记录到 tick " + tick + "）"));
+            send(server, ownerId, warn("珍珠在 tick " + config.reference.tick
+                    + " 前消失（最后 tick " + tick + "）"));
         }
 
         private void applyReferenceTickSample(PearlCannonConfig config)
@@ -402,8 +398,8 @@ public final class PearlCalibration
             if (!horizontalChanged(delta))
             {
                 applied = true;
-                send(server, ownerId, warn("异常：基准 tick " + config.reference.tick
-                        + " 未检测到 " + key + " 的水平动量变化"
+                send(server, ownerId, warn("基准 tick " + config.reference.tick
+                        + " 未检测到 " + key + " 的动量变化"
                         + anomalyTicks()));
                 return;
             }
@@ -424,8 +420,8 @@ public final class PearlCalibration
 
         private String anomalyTicks()
         {
-            if (samples.isEmpty()) return "；本颗珍珠没有检测到任何动量变化";
-            StringBuilder builder = new StringBuilder("；本颗珍珠的动量变化出现在 tick ");
+            if (samples.isEmpty()) return "；无动量变化";
+            StringBuilder builder = new StringBuilder("；变化在 tick ");
             for (int i = 0; i < samples.size(); i++)
             {
                 if (i > 0) builder.append(", ");
@@ -444,9 +440,9 @@ public final class PearlCalibration
             ServerPlayer player = player();
             if (player == null) return;
 
-            player.sendSystemMessage(header("选择基准 tick · 配置 " + configName));
-            player.sendSystemMessage(Component.literal("珍珠 " + key
-                    + " 检测到以下水平动量变化 tick（只看 XZ 轴），点击选择一次即可：").withStyle(ChatFormatting.GRAY));
+            player.sendSystemMessage(header("选择基准 tick · " + configName));
+            player.sendSystemMessage(Component.literal(key + " 的动量变化（XZ），点击选择：")
+                    .withStyle(ChatFormatting.GRAY));
 
             int shown = 0;
             for (TickSample sample : samples)

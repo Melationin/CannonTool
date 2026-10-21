@@ -109,13 +109,11 @@ public final class PearlCannonClientCommands
         List<String> names = ClientCannonConfigs.names();
         if (names.isEmpty())
         {
-            ClientMessages.send(source, "d 珍珠炮 ", "g 本地还没有配置；执行 ", "y /pearlCannonCalc pull ", "w <名称>",
-                    "g  从服务端拉取，或把 json 放进 ", "f " + ClientCannonConfigs.directory());
+            ClientMessages.send(source, "d 珍珠炮 ", "g 本地还没有配置；执行 ", "y /pearlCannonCalc pull ", "w <名称>");
             return;
         }
 
-        ClientMessages.send(source, "d 珍珠炮 ", "g 本地配置 ", "w " + names.size(),
-                "g  个（", "f " + ClientCannonConfigs.directory(), "g ）");
+        ClientMessages.send(source, "d 珍珠炮 ", "g 本地配置 ", "w " + names.size(), "g  个");
         for (String name : names)
         {
             PearlCannonConfig config = ClientCannonConfigs.get(name);
@@ -141,7 +139,6 @@ public final class PearlCannonClientCommands
         ClientMessages.send(source, "y  /pearlCannonCalc pull ", "w [名称]", "g  从服务端拉取配置到本地");
         ClientMessages.send(source, "y  /pearlCannonCalc list", "g  查看本地配置");
         ClientMessages.send(source, "g  配置器：", "y /pearlCannonConfig ...", "g （需要 OP）");
-        ClientMessages.send(source, "f  本地配置目录: " + ClientCannonConfigs.directory());
     }
 
     private static LiteralArgumentBuilder<FabricClientCommandSource> literal(String name)
