@@ -138,6 +138,27 @@ public final class PearlCannonConfigs
         return config;
     }
 
+    /** 接收客户端推送的配置；名称或 json 无效时返回 false。 */
+    public static boolean put(String name, String json)
+    {
+        if (directory == null || !ConfigNames.isValid(name)) return false;
+
+        try
+        {
+            PearlCannonConfig config = GSON.fromJson(json, PearlCannonConfig.class);
+            if (config == null) return false;
+            config.normalize();
+            configs.put(name, config);
+            save(name);
+            return true;
+        }
+        catch (Exception e)
+        {
+            LOGGER.error("Failed to accept pushed pearl cannon config {}", name, e);
+            return false;
+        }
+    }
+
     public static boolean remove(String name)
     {
         if (configs.remove(name) == null) return false;

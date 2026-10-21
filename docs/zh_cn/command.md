@@ -58,7 +58,9 @@
 
 ### 同步配置
 
-&emsp;&emsp;- `/pearlCannonCalc pull [名称] - 从服务端拉取一个或全部配置，保存到客户端配置目录`
+&emsp;&emsp;- `/pearlCannonCalc push <名称> - 把本地配置发送到服务端（需要 OP），名称使用客户端本地补全`
+
+&emsp;&emsp;- `/pearlCannonCalc pull [名称] - 从服务端拉取一个或全部配置，名称支持服务端补全`
 
 &emsp;&emsp;- `/pearlCannonCalc list - 列出本地已有配置及其基准 tick / 样本数`
 

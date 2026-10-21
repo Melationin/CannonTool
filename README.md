@@ -35,6 +35,7 @@
 客户端（不需要 OP，把配置拉到本地后计算）：
 
 ```
+/pearlCannonCalc push zzp1              # 把本地配置推送到服务端（需要 OP）
 /pearlCannonCalc pull zzp1              # 从服务端拉取配置到本地
 /pearlCannonCalc list                   # 查看本地已有配置
 /pearlCannonCalc normal zzp1 1635 -122 256

@@ -39,6 +39,21 @@ public class PearlCannonClient implements ClientModInitializer
             }
         });
 
+        ClientPlayNetworking.registerGlobalReceiver(PearlCannonPayloads.ConfigNamesPayload.TYPE, (payload, context) ->
+                ServerCannonNames.set(payload.names()));
+
+        ClientPlayNetworking.registerGlobalReceiver(PearlCannonPayloads.PushResultPayload.TYPE, (payload, context) ->
+        {
+            if (payload.error() == null || payload.error().isEmpty())
+            {
+                ClientMessages.send("d 珍珠炮 ", "l 已发送配置 ", "w " + payload.name());
+            }
+            else
+            {
+                ClientMessages.send("d 珍珠炮 ", "r " + payload.error());
+            }
+        });
+
         ClientTickEvents.END_CLIENT_TICK.register(client ->
         {
             Component display = PearlCannonCalc.hudDisplay();
@@ -50,6 +65,10 @@ public class PearlCannonClient implements ClientModInitializer
             //?}
         });
 
-        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> PearlCannonCalc.resetState());
+        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) ->
+        {
+            PearlCannonCalc.resetState();
+            ServerCannonNames.clear();
+        });
     }
 }

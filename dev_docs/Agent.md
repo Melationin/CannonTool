@@ -11,6 +11,8 @@
 - 服务端与客户端命令根互不重叠（`/pearlCannonConfig` 与 `/pearlCannonCalc`），客户端不需要转发服务端命令；服务端仍按 OP 权限校验。
 - 投掷物标定：`ThrowableProjectileCalibrationMixin` 统一在 `ThrowableProjectile.tick` 采样，`ProjectileHitCalibrationMixin` 同时注入 `ThrownEnderpearl` 和 `Snowball` 的 `onHit`；已移除的投掷物由 `PearlCalibration.onServerTick` 兜底结束。
 - 帮助只显示完整命令，说明放在命令的悬停提示里（`Messages` 的 `^` 段），不做单行表格对齐。
+- 服务端在玩家加入和配置增删时通过 `ConfigNamesPayload` 同步配置名，客户端缓存到 `ServerCannonNames`，供 `/pearlCannonCalc pull <名称>` 的补全使用。
+- `/pearlCannonCalc push <名称>` 读取客户端本地 json，经 `PushConfigPayload` 发到服务端；服务端校验 OP 后写入服务端配置，并通过 `PushResultPayload` 回执。
 
 ## 编码风格
 

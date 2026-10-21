@@ -58,7 +58,9 @@ Commands have two roots: `/pearlCannonConfig` runs on the server and requires OP
 
 ### Synchronizing configurations
 
-&emsp;&emsp;- `/pearlCannonCalc pull [name] - Pull one or all configurations from the server into the client config directory`
+&emsp;&emsp;- `/pearlCannonCalc push <name> - Send a local configuration to the server (requires OP); names are completed from the client`
+
+&emsp;&emsp;- `/pearlCannonCalc pull [name] - Pull one or all configurations from the server; names are completed from the server`
 
 &emsp;&emsp;- `/pearlCannonCalc list - List local configurations with their reference tick and sample count`
 

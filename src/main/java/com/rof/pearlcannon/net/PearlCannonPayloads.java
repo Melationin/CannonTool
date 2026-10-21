@@ -68,6 +68,56 @@ public final class PearlCannonPayloads
         }
     }
 
+    /** 服务端 -> 客户端：当前服务端配置名，按行拼接，用于 pull 补全。 */
+    public record ConfigNamesPayload(String names) implements CustomPacketPayload
+    {
+        public static final CustomPacketPayload.Type<ConfigNamesPayload> TYPE = payloadType("config_names");
+
+        public static final StreamCodec<RegistryFriendlyByteBuf, ConfigNamesPayload> CODEC = StreamCodec.composite(
+                ByteBufCodecs.STRING_UTF8, ConfigNamesPayload::names,
+                ConfigNamesPayload::new);
+
+        @Override
+        public CustomPacketPayload.Type<? extends CustomPacketPayload> type()
+        {
+            return TYPE;
+        }
+    }
+
+    /** 客户端 -> 服务端：推送本地配置。 */
+    public record PushConfigPayload(String name, String json) implements CustomPacketPayload
+    {
+        public static final CustomPacketPayload.Type<PushConfigPayload> TYPE = payloadType("push_config");
+
+        public static final StreamCodec<RegistryFriendlyByteBuf, PushConfigPayload> CODEC = StreamCodec.composite(
+                ByteBufCodecs.STRING_UTF8, PushConfigPayload::name,
+                ByteBufCodecs.STRING_UTF8, PushConfigPayload::json,
+                PushConfigPayload::new);
+
+        @Override
+        public CustomPacketPayload.Type<? extends CustomPacketPayload> type()
+        {
+            return TYPE;
+        }
+    }
+
+    /** 服务端 -> 客户端：推送结果，error 为空表示成功。 */
+    public record PushResultPayload(String name, String error) implements CustomPacketPayload
+    {
+        public static final CustomPacketPayload.Type<PushResultPayload> TYPE = payloadType("push_result");
+
+        public static final StreamCodec<RegistryFriendlyByteBuf, PushResultPayload> CODEC = StreamCodec.composite(
+                ByteBufCodecs.STRING_UTF8, PushResultPayload::name,
+                ByteBufCodecs.STRING_UTF8, PushResultPayload::error,
+                PushResultPayload::new);
+
+        @Override
+        public CustomPacketPayload.Type<? extends CustomPacketPayload> type()
+        {
+            return TYPE;
+        }
+    }
+
     private PearlCannonPayloads() {}
 
     private static boolean registered;
@@ -79,12 +129,18 @@ public final class PearlCannonPayloads
         registered = true;
         //? >=26.1 {
         PayloadTypeRegistry.serverboundPlay().register(PullRequestPayload.TYPE, PullRequestPayload.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(PushConfigPayload.TYPE, PushConfigPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(ConfigPayload.TYPE, ConfigPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(PullResultPayload.TYPE, PullResultPayload.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(ConfigNamesPayload.TYPE, ConfigNamesPayload.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(PushResultPayload.TYPE, PushResultPayload.CODEC);
         //?} else {
         /*PayloadTypeRegistry.playC2S().register(PullRequestPayload.TYPE, PullRequestPayload.CODEC);
+        PayloadTypeRegistry.playC2S().register(PushConfigPayload.TYPE, PushConfigPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(ConfigPayload.TYPE, ConfigPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(PullResultPayload.TYPE, PullResultPayload.CODEC);
+        PayloadTypeRegistry.playS2C().register(ConfigNamesPayload.TYPE, ConfigNamesPayload.CODEC);
+        PayloadTypeRegistry.playS2C().register(PushResultPayload.TYPE, PushResultPayload.CODEC);
         *///?}
     }
 

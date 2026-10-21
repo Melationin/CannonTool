@@ -73,6 +73,24 @@ public final class ClientCannonConfigs
         }
     }
 
+    /** 读取原始 json，用于推送到服务端。 */
+    public static String json(String name)
+    {
+        if (!ConfigNames.isValid(name)) return null;
+        Path file = file(name);
+        if (!Files.isRegularFile(file)) return null;
+
+        try
+        {
+            return Files.readString(file, StandardCharsets.UTF_8);
+        }
+        catch (Exception e)
+        {
+            PearlCannon.LOGGER.error("Failed to read client pearl cannon config {}", file, e);
+            return null;
+        }
+    }
+
     /** 保存服务端下发的 json；名称或 json 无效时返回 false。 */
     public static boolean save(String name, String json)
     {

@@ -11,6 +11,7 @@ import com.rof.pearlcannon.calibration.PearlCalibration;
 import com.rof.pearlcannon.config.PearlCannonConfig;
 import com.rof.pearlcannon.config.PearlCannonConfigs;
 import com.rof.pearlcannon.config.PearlCannonRom;
+import com.rof.pearlcannon.net.ServerConfigShare;
 import com.rof.pearlcannon.util.CommandAccess;
 import com.rof.pearlcannon.util.ConfigNames;
 import com.rof.pearlcannon.util.Format;
@@ -76,6 +77,7 @@ public final class PearlCannonConfigCommands
                                 return 0;
                             }
                             PearlCalibration.startSession(player, name);
+                            ServerConfigShare.broadcastNames(context.getSource().getServer());
                             return 1;
                         })));
 
@@ -102,6 +104,7 @@ public final class PearlCannonConfigCommands
                             if (PearlCannonConfigs.remove(name))
                             {
                                 Messages.send(context.getSource(), "d 珍珠炮 ", "g 已删除配置 ", "w " + name);
+                                ServerConfigShare.broadcastNames(context.getSource().getServer());
                             }
                             else
                             {
@@ -443,6 +446,6 @@ public final class PearlCannonConfigCommands
 
     private static void help(CommandSourceStack source, String command, String description)
     {
-        Messages.send(source, "g   " + command, "^ " + description);
+        Messages.send(source, "g - " + command, "^ " + description);
     }
 }
