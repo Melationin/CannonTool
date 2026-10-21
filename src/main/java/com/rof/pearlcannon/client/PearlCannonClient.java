@@ -1,8 +1,10 @@
 package com.rof.pearlcannon.client;
 
 import com.rof.pearlcannon.net.PearlCannonPayloads;
+import com.rof.pearlcannon.util.Messages;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 
@@ -35,6 +37,17 @@ public class PearlCannonClient implements ClientModInitializer
             {
                 ClientMessages.send("d 珍珠炮 ", "l 已拉取 ", "w " + payload.count(), "l 个配置");
             }
+        });
+
+        ClientTickEvents.END_CLIENT_TICK.register(client ->
+        {
+            String code = PearlCannonCalc.hudCode();
+            if (code == null || client.player == null) return;
+            //? >=26.2 {
+            /*client.gui.hud.setOverlayMessage(Messages.c("g 配置编码 ", "y " + code), false);
+            *///?} else {
+            client.gui.setOverlayMessage(Messages.c("g 配置编码 ", "y " + code), false);
+            //?}
         });
 
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> PearlCannonCalc.resetState());

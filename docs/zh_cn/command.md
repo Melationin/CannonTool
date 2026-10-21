@@ -10,7 +10,7 @@
 
 ### 配置
 
-&emsp;&emsp;- `/pearlCannonConfig start <名称> - 开始配置；之后只记录以“名称:”开头的命名珍珠`
+&emsp;&emsp;- `/pearlCannonConfig start <名称> - 开始配置；之后只记录以“名称:”开头的命名珍珠/雪球`
 
 &emsp;&emsp;- `/pearlCannonConfig stop - 结束当前配置`
 
@@ -26,13 +26,13 @@
 
 &emsp;&emsp;- `/pearlCannonConfig selectTick <tick> - 在聊天栏点击选择基准 tick`
 
-&emsp;&emsp;- `/pearlCannonConfig give - 为当前配置发放 00B/00R/01B/01R/10B/10R/11B/11R 共 8 颗命名珍珠`
+&emsp;&emsp;- `/pearlCannonConfig give [ender_pearl|snowball] - 为当前配置发放 8 颗命名投掷物，默认末影珍珠`
 
 ### 标定
 
-&emsp;&emsp;- 第一颗珍珠结束后，聊天栏会列出所有水平动量变化非零的 tick，点击其中一个作为基准 tick
+&emsp;&emsp;- 第一颗投掷物结束后，聊天栏会列出所有水平动量变化非零的 tick，点击其中一个作为基准 tick
 
-&emsp;&emsp;- 之后每颗珍珠都在基准 tick 末记录并清理；该 tick 没有动量变化时会提示异常
+&emsp;&emsp;- 之后每颗投掷物都在基准 tick 末记录并清理；该 tick 没有动量变化时会提示异常
 
 &emsp;&emsp;- 样本名：`00B` `00R` `01B` `01R` `10B` `10R` `11B` `11R`；空配置用 `ZZ` 命名（可选）
 
@@ -70,11 +70,13 @@
 
 &emsp;&emsp;- `/pearlCannonCalc plane <名称> <x> <z> <y> [最大tick] - 平面模式：以珍珠向下穿过高度 y 的平面作为落点，取命中那一 tick 开始时的传送坐标`
 
-&emsp;&emsp;- `/pearlCannonCalc expand <序号> - 展开某条计算结果的详细信息`
+&emsp;&emsp;- `/pearlCannonCalc expand <序号> - 展开某条计算结果的详细信息（含配置编码、红阵列、蓝阵列）`
 
-&emsp;&emsp;- 结果按误差排序，短行包含：序号、tick、落点、误差、总数；`[展开]` 可看方向、蓝/红药量、初速度与二进制码
+&emsp;&emsp;- `/pearlCannonCalc hud <序号|off> - 把某条结果的配置编码持续显示在动作栏，off 关闭`
 
-&emsp;&emsp;- 配置了 ROM 时，`[展开]` 里的码可直接点击复制
+&emsp;&emsp;- 结果按误差排序，短行包含：序号、tick、落点、误差、总数；`[展开]` 可看方向、蓝/红药量、初速度与配置编码
+
+&emsp;&emsp;- 配置了 ROM 时，`[展开]` 里的配置编码可直接点击复制
 
 ## 两个根互不干扰
 

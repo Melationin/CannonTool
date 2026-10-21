@@ -4,7 +4,7 @@
   "version": "${modVer}",
 
   "name": "Pearl Cannon Calculator",
-  "description": "In-game ender pearl cannon calibration and firing-solution calculator.",
+  "description": "In-game ender pearl/snowball cannon calibration and firing-solution calculator.",
   "authors": [
     "Zhddsj"
   ],

@@ -23,10 +23,12 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
 import java.util.List;
+import java.util.Locale;
 
 /** 服务端珍珠炮配置命令：标定、药量上限与 ROM。计算在客户端执行。 */
 public final class PearlCannonConfigCommands
@@ -36,6 +38,11 @@ public final class PearlCannonConfigCommands
 
     private static final SuggestionProvider<CommandSourceStack> ORDER_SUGGESTIONS =
             (context, builder) -> SharedSuggestionProvider.suggest(PearlCannonRom.ORDERS, builder);
+
+    private static final String[] GIVE_TYPES = { "ender_pearl", "snowball" };
+
+    private static final SuggestionProvider<CommandSourceStack> GIVE_SUGGESTIONS =
+            (context, builder) -> SharedSuggestionProvider.suggest(GIVE_TYPES, builder);
 
     private record Active(String name, PearlCannonConfig config) {}
 
@@ -134,7 +141,10 @@ public final class PearlCannonConfigCommands
                         })));
 
         root.then(Commands.literal("give")
-                .executes(PearlCannonConfigCommands::givePearls));
+                .executes(context -> giveProjectiles(context, "ender_pearl"))
+                .then(Commands.argument("type", StringArgumentType.word())
+                        .suggests(GIVE_SUGGESTIONS)
+                        .executes(context -> giveProjectiles(context, StringArgumentType.getString(context, "type")))));
 
         root.then(romCommand());
 
@@ -340,7 +350,7 @@ public final class PearlCannonConfigCommands
                 "g  ：", "w " + PearlCannonRom.formatWeights(config.rom.blue));
     }
 
-    private static int givePearls(CommandContext<CommandSourceStack> context) throws CommandSyntaxException
+    private static int giveProjectiles(CommandContext<CommandSourceStack> context, String type) throws CommandSyntaxException
     {
         CommandSourceStack source = context.getSource();
         ServerPlayer player = source.getPlayerOrException();
@@ -348,13 +358,32 @@ public final class PearlCannonConfigCommands
         if (active == null) return 0;
         String name = active.name();
 
+        Item item;
+        String label;
+        String normalized = type.toLowerCase(Locale.ROOT);
+        if (normalized.equals("ender_pearl"))
+        {
+            item = Items.ENDER_PEARL;
+            label = "末影珍珠";
+        }
+        else if (normalized.equals("snowball"))
+        {
+            item = Items.SNOWBALL;
+            label = "雪球";
+        }
+        else
+        {
+            Messages.fail(source, "r 类型必须是 ", "y ender_pearl", "r 或 ", "y snowball");
+            return 0;
+        }
+
         int count = 0;
         for (String direction : PearlCannonConfig.DIRECTIONS)
         {
             for (String color : PearlCannonConfig.COLORS)
             {
                 String key = direction + color;
-                ItemStack stack = new ItemStack(Items.ENDER_PEARL);
+                ItemStack stack = new ItemStack(item);
                 stack.set(DataComponents.CUSTOM_NAME, Component.literal(name + ":" + key)
                         .withStyle(style -> style.withColor(ChatFormatting.AQUA).withItalic(false)));
                 if (!player.getInventory().add(stack))
@@ -366,10 +395,10 @@ public final class PearlCannonConfigCommands
             }
         }
 
-        Messages.send(source, "d 珍珠炮 ", "g 已发放 ", "w " + count, "g  颗标定珍珠（配置 ", "w " + name, "g ）");
+        Messages.send(source, "d 珍珠炮 ", "g 已发放 ", "w " + count, "g  颗", "w " + label, "g （配置 ", "w " + name, "g ）");
         if (!active.config().hasReference())
         {
-            Messages.send(source, "g 第一颗珍珠后选择基准 tick");
+            Messages.send(source, "g 第一颗珍珠/雪球后选择基准 tick");
         }
         return 1;
     }
@@ -403,6 +432,7 @@ public final class PearlCannonConfigCommands
         Messages.send(source, "y  /pearlCannonConfig rom order ", "w <RBD|RDB|BRD|BDR|DRB|DBR>");
         Messages.send(source, "y  /pearlCannonConfig rom red|blue ", "w <w1,w2,...>");
         Messages.send(source, "y  /pearlCannonConfig rom red|blue inverse ", "w <w1,w2,...>");
-        Messages.send(source, "y  /pearlCannonConfig rom show", "g  / ", "y give", "g  / ", "y resetTick");
+        Messages.send(source, "y  /pearlCannonConfig rom show", "g  / ", "y resetTick");
+        Messages.send(source, "y  /pearlCannonConfig give ", "w [ender_pearl|snowball]");
     }
 }

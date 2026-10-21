@@ -3,7 +3,8 @@
   "package": "com.rof.pearlcannon.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
-    "ThrownEnderpearlCalibrationMixin"
+    "ThrowableProjectileCalibrationMixin",
+    "ProjectileHitCalibrationMixin"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -10,7 +10,7 @@ Commands have two roots: `/pearlCannonConfig` runs on the server and requires OP
 
 ### Configuration
 
-&emsp;&emsp;- `/pearlCannonConfig start <name> - Start configuring; only named pearls whose name starts with "name:" are recorded`
+&emsp;&emsp;- `/pearlCannonConfig start <name> - Start configuring; only named ender pearls/snowballs whose name starts with "name:" are recorded`
 
 &emsp;&emsp;- `/pearlCannonConfig stop - Stop the current configuration`
 
@@ -26,13 +26,13 @@ Commands have two roots: `/pearlCannonConfig` runs on the server and requires OP
 
 &emsp;&emsp;- `/pearlCannonConfig selectTick <tick> - Pick the reference tick by clicking in chat`
 
-&emsp;&emsp;- `/pearlCannonConfig give - Give the 8 named calibration pearls 00B/00R/01B/01R/10B/10R/11B/11R`
+&emsp;&emsp;- `/pearlCannonConfig give [ender_pearl|snowball] - Give the 8 named calibration projectiles; ender pearl by default`
 
 ### Calibration
 
-&emsp;&emsp;- After the first pearl ends, chat lists every tick with a non-zero horizontal momentum change; click one to use it as the reference tick
+&emsp;&emsp;- After the first projectile ends, chat lists every tick with a non-zero horizontal momentum change; click one to use it as the reference tick
 
-&emsp;&emsp;- Every later pearl is recorded and discarded at the end of the reference tick; a zero change is reported as an anomaly
+&emsp;&emsp;- Every later projectile is recorded and discarded at the end of the reference tick; a zero change is reported as an anomaly
 
 &emsp;&emsp;- Sample names: `00B` `00R` `01B` `01R` `10B` `10R` `11B` `11R`; the optional empty configuration uses `ZZ`
 
@@ -70,11 +70,13 @@ Commands have two roots: `/pearlCannonConfig` runs on the server and requires OP
 
 &emsp;&emsp;- `/pearlCannonCalc plane <name> <x> <z> <y> [maxTicks] - Plane mode: land on the plane at height y and report the teleport position at the hit tick`
 
-&emsp;&emsp;- `/pearlCannonCalc expand <index> - Expand the details of one result`
+&emsp;&emsp;- `/pearlCannonCalc expand <index> - Expand the details of one result (configuration code, red/blue arrays)`
+
+&emsp;&emsp;- `/pearlCannonCalc hud <index|off> - Keep a result's configuration code on the action bar; use off to hide it`
 
 &emsp;&emsp;- Results are sorted by error; each row shows index, tick, landing point, error and total TNT count
 
-&emsp;&emsp;- When a ROM is configured, the binary code in the expanded view can be clicked to copy
+&emsp;&emsp;- When a ROM is configured, the configuration code in the expanded view can be clicked to copy
 
 ## Two independent roots
 

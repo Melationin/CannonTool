@@ -46,6 +46,10 @@ stonecutter {
 				"net.minecraft.world.entity.projectile.throwableitemprojectile.ThrowableItemProjectile",
 				"net.minecraft.world.entity.projectile.ThrowableItemProjectile"
 		)
+		replace(
+				"net.minecraft.world.entity.projectile.throwableitemprojectile.Snowball",
+				"net.minecraft.world.entity.projectile.Snowball"
+		)
 		// the same classes appear as mixin @At descriptors (slash form)
 		replace(
 				"Lnet/minecraft/world/entity/projectile/throwableitemprojectile/ThrownEnderpearl;",
@@ -54,6 +58,10 @@ stonecutter {
 		replace(
 				"Lnet/minecraft/world/entity/projectile/throwableitemprojectile/ThrowableItemProjectile;",
 				"Lnet/minecraft/world/entity/projectile/ThrowableItemProjectile;"
+		)
+		replace(
+				"Lnet/minecraft/world/entity/projectile/throwableitemprojectile/Snowball;",
+				"Lnet/minecraft/world/entity/projectile/Snowball;"
 		)
 	}
 }

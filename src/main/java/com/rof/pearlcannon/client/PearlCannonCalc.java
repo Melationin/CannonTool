@@ -26,6 +26,8 @@ public final class PearlCannonCalc
 
     private static final Map<UUID, LastResults> LAST_RESULTS = new HashMap<>();
 
+    private static String hudCode;
+
     private record LastResults(String configName, double targetX, double targetZ, double planeY, boolean plane,
                                int maxTicks, int maxTnt, List<PearlCannonSolver.Solution> solutions) {}
 
@@ -34,6 +36,12 @@ public final class PearlCannonCalc
     public static void resetState()
     {
         LAST_RESULTS.clear();
+        hudCode = null;
+    }
+
+    public static String hudCode()
+    {
+        return hudCode;
     }
 
     public static int calculate(CommandContext<FabricClientCommandSource> context, boolean plane) throws CommandSyntaxException
@@ -152,15 +160,74 @@ public final class PearlCannonCalc
             if (redBits != null && blueBits != null)
             {
                 String code = PearlCannonRom.buildCode(config.rom.order, solution.group(), redBits, blueBits);
-                ClientMessages.send(source, "g   码 ", "y " + code, "d   [复制码]", "&" + code, "^ 点击复制码");
-                ClientMessages.send(source, "g   红 ", "w " + PearlCannonRom.describeBits(config.rom.red, redBits));
-                ClientMessages.send(source, "g   蓝 ", "w " + PearlCannonRom.describeBits(config.rom.blue, blueBits));
+                ClientMessages.send(source, "g   配置编码 ", "y " + code, "d   [复制]", "&" + code, "^ 点击复制配置编码");
+                ClientMessages.send(source, "g   红阵列 ", "w " + PearlCannonRom.describeBits(config.rom.red, redBits));
+                ClientMessages.send(source, "g   蓝阵列 ", "w " + PearlCannonRom.describeBits(config.rom.blue, blueBits));
             }
         }
 
         ClientMessages.send(source, "g   落点 ", "w " + Format.vec(solution.end()),
                 "g   误差 ", "y " + Format.f3(solution.error()));
         return 1;
+    }
+
+    public static int showHud(CommandContext<FabricClientCommandSource> context) throws CommandSyntaxException
+    {
+        FabricClientCommandSource source = context.getSource();
+        if (source.getPlayer() == null) return 0;
+        LastResults last = LAST_RESULTS.get(source.getPlayer().getUUID());
+        if (last == null)
+        {
+            ClientMessages.fail(source, "r 还没有计算结果");
+            return 0;
+        }
+
+        int index = IntegerArgumentType.getInteger(context, "index");
+        if (index < 1 || index > last.solutions().size())
+        {
+            ClientMessages.fail(source, "r 序号超出范围（共 " + last.solutions().size() + " 条）");
+            return 0;
+        }
+
+        PearlCannonConfig config = ClientCannonConfigs.get(last.configName());
+        if (config == null)
+        {
+            ClientMessages.fail(source, "r 本地配置 " + last.configName() + " 已不存在");
+            return 0;
+        }
+
+        String code = buildCode(config, last.solutions().get(index - 1));
+        if (code == null)
+        {
+            ClientMessages.fail(source, "r 无法生成配置编码（检查 ROM 配置）");
+            return 0;
+        }
+
+        hudCode = code;
+        ClientMessages.send(source, "d 珍珠炮 ", "g 显示配置编码 ", "y " + code);
+        return 1;
+    }
+
+    public static int hideHud(CommandContext<FabricClientCommandSource> context)
+    {
+        FabricClientCommandSource source = context.getSource();
+        if (hudCode == null)
+        {
+            ClientMessages.fail(source, "r 当前没有显示配置编码");
+            return 0;
+        }
+        hudCode = null;
+        ClientMessages.send(source, "d 珍珠炮 ", "g 已隐藏配置编码");
+        return 1;
+    }
+
+    private static String buildCode(PearlCannonConfig config, PearlCannonSolver.Solution solution)
+    {
+        if (!PearlCannonRom.configured(config.rom)) return null;
+        boolean[] redBits = PearlCannonRom.decompose(config.rom.red, solution.red());
+        boolean[] blueBits = PearlCannonRom.decompose(config.rom.blue, solution.blue());
+        if (redBits == null || blueBits == null) return null;
+        return PearlCannonRom.buildCode(config.rom.order, solution.group(), redBits, blueBits);
     }
 
     private static int maxTicks(CommandContext<FabricClientCommandSource> context)

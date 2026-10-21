@@ -40,6 +40,7 @@ public final class PearlCannonClientCommands
         root.then(normalCommand());
         root.then(planeCommand());
         root.then(expandCommand());
+        root.then(hudCommand());
         root.then(pullCommand());
         root.then(literal("list").executes(context ->
         {
@@ -80,6 +81,19 @@ public final class PearlCannonClientCommands
         return literal("expand")
                 .then(argument("index", IntegerArgumentType.integer(1))
                         .executes(PearlCannonCalc::expand));
+    }
+
+    private static LiteralArgumentBuilder<FabricClientCommandSource> hudCommand()
+    {
+        return literal("hud")
+                .executes(context ->
+                {
+                    ClientMessages.fail(context.getSource(), "r 用法：", "y /pearlCannonCalc hud <序号|off>");
+                    return 0;
+                })
+                .then(literal("off").executes(PearlCannonCalc::hideHud))
+                .then(argument("index", IntegerArgumentType.integer(1))
+                        .executes(PearlCannonCalc::showHud));
     }
 
     private static LiteralArgumentBuilder<FabricClientCommandSource> pullCommand()
@@ -136,6 +150,7 @@ public final class PearlCannonClientCommands
         ClientMessages.send(source, "y  /pearlCannonCalc normal ", "w <名称> <x> <z> [最大tick]");
         ClientMessages.send(source, "y  /pearlCannonCalc plane ", "w <名称> <x> <z> <y> [最大tick]");
         ClientMessages.send(source, "y  /pearlCannonCalc expand ", "w <序号>");
+        ClientMessages.send(source, "y  /pearlCannonCalc hud ", "w <序号|off>", "g  持续显示配置编码");
         ClientMessages.send(source, "y  /pearlCannonCalc pull ", "w [名称]", "g  从服务端拉取配置到本地");
         ClientMessages.send(source, "y  /pearlCannonCalc list", "g  查看本地配置");
         ClientMessages.send(source, "g  配置器：", "y /pearlCannonConfig ...", "g （需要 OP）");

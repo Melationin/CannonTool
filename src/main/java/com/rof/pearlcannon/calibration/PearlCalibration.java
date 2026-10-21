@@ -11,7 +11,8 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.projectile.throwableitemprojectile.ThrownEnderpearl;
+import net.minecraft.world.entity.projectile.ThrowableProjectile;
+import net.minecraft.world.entity.projectile.throwableitemprojectile.ThrowableItemProjectile;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
 
@@ -23,8 +24,8 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * 珍珠炮标定：记录以“配置名:样本名”命名的珍珠，逐 tick 采样它在自身 tick 之外的动量变化。
- * <p>Δv(t) = v_开头(t) − v_末尾(t−1)。第一颗珍珠用于选择基准 tick，之后每颗珍珠都在基准 tick 末被清理。</p>
+ * 珍珠/雪球标定：记录以“配置名:样本名”命名的投掷物，逐 tick 采样它在自身 tick 之外的动量变化。
+ * <p>Δv(t) = v_开头(t) − v_末尾(t−1)。第一颗投掷物用于选择基准 tick，之后每颗都在基准 tick 末被清理。</p>
  */
 public final class PearlCalibration
 {
@@ -33,7 +34,7 @@ public final class PearlCalibration
     private static final int MAX_SELECTION_ROWS = 16;
 
     private static final Map<UUID, String> SESSIONS = new HashMap<>();
-    private static final Map<UUID, UUID> ACTIVE = new HashMap<>();
+    private static final Map<UUID, Trace> ACTIVE = new HashMap<>();
     private static final Map<UUID, Pending> PENDING = new HashMap<>();
 
     private PearlCalibration() {}
@@ -65,11 +66,11 @@ public final class PearlCalibration
         PENDING.remove(player.getUUID());
 
         player.sendSystemMessage(header("开始配置 " + configName));
-        player.sendSystemMessage(Component.literal("投掷命名为 " + configName + ":样本名 的珍珠（00B~11R，ZZ 为空配置）")
+        player.sendSystemMessage(Component.literal("投掷命名为 " + configName + ":样本名 的珍珠/雪球（00B~11R，ZZ 为空配置）")
                 .withStyle(ChatFormatting.GRAY));
         if (!config.hasReference())
         {
-            player.sendSystemMessage(Component.literal("第一颗珍珠后选择基准 tick").withStyle(ChatFormatting.GOLD));
+            player.sendSystemMessage(Component.literal("第一颗珍珠/雪球后选择基准 tick").withStyle(ChatFormatting.GOLD));
         }
         sendProgress(player, configName);
     }
@@ -91,18 +92,23 @@ public final class PearlCalibration
         return SESSIONS.get(player);
     }
 
-    /** 由 Mixin 在珍珠第一次 tick 时调用；throwOrigin 为投掷瞬间的玩家坐标，不跟踪时返回 null。 */
-    public static Trace begin(ThrownEnderpearl pearl, Vec3 throwOrigin)
+    /** 由 Mixin 在投掷物第一次 tick 时调用；不跟踪时返回 null。 */
+    public static Trace begin(ThrowableProjectile projectile)
     {
-        Entity owner = pearl.getOwner();
+        if (!(projectile instanceof ThrowableItemProjectile itemProjectile)) return null;
+
+        Entity owner = itemProjectile.getOwner();
         if (!(owner instanceof ServerPlayer player)) return null;
         UUID playerId = player.getUUID();
-        if (ACTIVE.containsKey(playerId)) return null;
+        for (Trace active : ACTIVE.values())
+        {
+            if (active.ownerId.equals(playerId)) return null;
+        }
 
         String configName = SESSIONS.get(playerId);
         if (configName == null) return null;
 
-        String name = pearlName(pearl);
+        String name = pearlName(itemProjectile);
         if (name == null) return null;
         String key = PearlCannonConfig.sampleKeyOf(name, configName);
         if (key == null)
@@ -115,9 +121,9 @@ public final class PearlCalibration
         }
 
         //? >=1.21.11 {
-        String dimension = pearl.level().dimension().identifier().toString();
+        String dimension = itemProjectile.level().dimension().identifier().toString();
         //?} else {
-        /*String dimension = pearl.level().dimension().location().toString();
+        /*String dimension = itemProjectile.level().dimension().location().toString();
         *///?}
 
         PearlCannonConfig config = PearlCannonConfigs.get(configName);
@@ -128,9 +134,46 @@ public final class PearlCalibration
             return null;
         }
 
-        ACTIVE.put(playerId, pearl.getUUID());
-        Vec3 origin = throwOrigin != null ? throwOrigin : player.position();
-        return new Trace(pearl.level().getServer(), playerId, configName, key, origin, dimension);
+        Trace trace = new Trace(itemProjectile, itemProjectile.level().getServer(), playerId, configName, key,
+                player.position(), dimension);
+        ACTIVE.put(itemProjectile.getUUID(), trace);
+        return trace;
+    }
+
+    public static boolean hasTrace(ThrowableProjectile projectile)
+    {
+        return ACTIVE.containsKey(projectile.getUUID());
+    }
+
+    public static void tickHead(ThrowableProjectile projectile, Vec3 position, Vec3 motion)
+    {
+        Trace trace = ACTIVE.get(projectile.getUUID());
+        if (trace != null) trace.onTickHead(position, motion);
+    }
+
+    public static boolean tickEnd(ThrowableProjectile projectile, Vec3 motion)
+    {
+        Trace trace = ACTIVE.get(projectile.getUUID());
+        return trace != null && trace.onTickEnd(motion);
+    }
+
+    /** 命中时结束标定；返回 true 表示已取消原版命中处理。 */
+    public static boolean onHit(ThrowableItemProjectile projectile)
+    {
+        Trace trace = ACTIVE.get(projectile.getUUID());
+        if (trace == null) return false;
+        trace.finish();
+        if (!projectile.isRemoved()) projectile.discard();
+        return true;
+    }
+
+    public static void onServerTick(MinecraftServer server)
+    {
+        if (ACTIVE.isEmpty()) return;
+        for (Trace trace : new ArrayList<>(ACTIVE.values()))
+        {
+            if (trace.projectile.isRemoved()) trace.finish();
+        }
     }
 
     public static void selectTick(ServerPlayer player, int tick)
@@ -153,7 +196,7 @@ public final class PearlCalibration
         }
         if (sample == null)
         {
-            player.sendSystemMessage(warn("该珍珠在 tick " + tick + " 没有动量变化"));
+            player.sendSystemMessage(warn("该弹射物在 tick " + tick + " 没有动量变化"));
             return;
         }
 
@@ -252,16 +295,16 @@ public final class PearlCalibration
         return result;
     }
 
-    public static boolean hasName(ThrownEnderpearl pearl)
+    public static boolean hasName(ThrowableProjectile projectile)
     {
-        return pearlName(pearl) != null;
+        return projectile instanceof ThrowableItemProjectile itemProjectile && pearlName(itemProjectile) != null;
     }
 
-    private static String pearlName(ThrownEnderpearl pearl)
+    private static String pearlName(ThrowableItemProjectile projectile)
     {
-        Component custom = pearl.getCustomName();
+        Component custom = projectile.getCustomName();
         if (custom != null) return custom.getString();
-        ItemStack item = pearl.getItem();
+        ItemStack item = projectile.getItem();
         if (item != null && !item.isEmpty() && item.getCustomName() != null) return item.getCustomName().getString();
         return null;
     }
@@ -293,6 +336,7 @@ public final class PearlCalibration
 
     public static final class Trace
     {
+        private final ThrowableItemProjectile projectile;
         private final MinecraftServer server;
         private final UUID ownerId;
         private final String configName;
@@ -309,9 +353,10 @@ public final class PearlCalibration
         private boolean applied;
         private boolean finished;
 
-        private Trace(MinecraftServer server, UUID ownerId, String configName, String key,
-                      Vec3 origin, String dimension)
+        private Trace(ThrowableItemProjectile projectile, MinecraftServer server, UUID ownerId, String configName,
+                      String key, Vec3 origin, String dimension)
         {
+            this.projectile = projectile;
             this.server = server;
             this.ownerId = ownerId;
             this.configName = configName;
@@ -359,6 +404,7 @@ public final class PearlCalibration
             if (config.hasReference() && tick == config.reference.tick)
             {
                 applyReferenceTickSample(config);
+                finish();
                 return true;
             }
             return false;
@@ -368,7 +414,7 @@ public final class PearlCalibration
         {
             if (finished) return;
             finished = true;
-            ACTIVE.remove(ownerId);
+            ACTIVE.remove(projectile.getUUID());
             if (applied) return;
 
             PearlCannonConfig config = PearlCannonConfigs.get(configName);
@@ -396,7 +442,7 @@ public final class PearlCalibration
                 return;
             }
 
-            send(server, ownerId, warn("珍珠在 tick " + config.reference.tick
+            send(server, ownerId, warn("弹射物在 tick " + config.reference.tick
                     + " 前消失（最后 tick " + tick + "）"));
         }
 

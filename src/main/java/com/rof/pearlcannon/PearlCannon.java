@@ -8,6 +8,7 @@ import com.rof.pearlcannon.net.ServerConfigShare;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,6 +25,8 @@ public class PearlCannon implements ModInitializer
 
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) ->
                 PearlCannonConfigCommands.register(dispatcher));
+
+        ServerTickEvents.END_SERVER_TICK.register(PearlCalibration::onServerTick);
 
         ServerLifecycleEvents.SERVER_STARTED.register(server ->
         {

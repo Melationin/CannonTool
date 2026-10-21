@@ -23,8 +23,8 @@
 
 ```
 /pearlCannonConfig start zzp1           # 开始配置
-/pearlCannonConfig give                 # 领取 8 颗已命名的标定珍珠
-# 投掷第一颗珍珠 → 在聊天栏点击选择一个基准 tick
+/pearlCannonConfig give                 # 领取 8 颗已命名的末影珍珠（give snowball 换雪球）
+# 投掷第一颗珍珠/雪球 → 在聊天栏点击选择一个基准 tick
 # 依次投掷其余 7 颗（以及可选的 zzp1:ZZ 空配置）
 /pearlCannonConfig maxTnt 3000          # 设置最大单侧药量
 /pearlCannonConfig rom order RBD        # 设置红/蓝/方向三段的排列
@@ -39,6 +39,7 @@
 /pearlCannonCalc list                   # 查看本地已有配置
 /pearlCannonCalc normal zzp1 1635 -122 256
 /pearlCannonCalc plane  zzp1 1635 -122 64 256
+/pearlCannonCalc hud 1                  # 把第 1 条结果的配置编码持续显示在动作栏
 ```
 
 也可以不走拉取：把服务端的 `<world>/pearlcannon/zzp1.json` 手动复制到 `.minecraft/config/pearlcannon/zzp1.json`，下次计算会自动读取。
