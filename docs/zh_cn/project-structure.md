@@ -11,6 +11,7 @@ com/rof/pearlcannon/
 │   ├── PearlCannonClient.java          # 客户端入口：本地命令、配置编码 HUD、接收服务端配置
 │   ├── PearlCannonClientCommands.java  # /pearlCannonCalc normal|plane|expand|hud|pull|list
 │   ├── PearlCannonCalc.java            # 客户端求解、结果展示与配置编码 HUD
+│   ├── ClientHelp.java                 # 帮助排版：按当前字体宽度对齐说明列
 │   ├── ClientCannonConfigs.java        # 客户端配置：config/pearlcannon/<名称>.json
 │   └── ClientMessages.java             # 客户端聊天输出
 ├── command/
@@ -20,7 +21,7 @@ com/rof/pearlcannon/
 │   ├── PearlCannonConfigs.java         # 服务端配置注册表：world/pearlcannon/<名称>.json
 │   └── PearlCannonRom.java             # 二进制 ROM：三段顺序、权重表、子集和/编码
 ├── net/
-│   ├── PearlCannonPayloads.java        # pull 请求 / 配置下发 / 结束标记 payload
+│   ├── PearlCannonPayloads.java        # pull 请求 / 配置下发 / 结束标记 / 帮助 payload
 │   └── ServerConfigShare.java          # 服务端响应拉取请求
 ├── solver/
 │   └── PearlCannonSolver.java          # 求解器：tick 模式与平面模式（客户端调用）

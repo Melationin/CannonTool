@@ -11,10 +11,12 @@ import com.rof.pearlcannon.calibration.PearlCalibration;
 import com.rof.pearlcannon.config.PearlCannonConfig;
 import com.rof.pearlcannon.config.PearlCannonConfigs;
 import com.rof.pearlcannon.config.PearlCannonRom;
+import com.rof.pearlcannon.net.PearlCannonPayloads;
 import com.rof.pearlcannon.util.CommandAccess;
 import com.rof.pearlcannon.util.ConfigNames;
 import com.rof.pearlcannon.util.Format;
 import com.rof.pearlcannon.util.Messages;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -425,24 +427,40 @@ public final class PearlCannonConfigCommands
 
     private static void sendHelp(CommandSourceStack source)
     {
-        Messages.send(source, "d 珍珠炮 ", "g 配置器  ", "g /pearlCannonConfig <子命令>");
-        help(source, "start <名称>", "开始配置");
-        help(source, "stop", "结束配置");
-        help(source, "list", "列出配置");
-        help(source, "info", "查看当前配置");
-        help(source, "delete <名称>", "删除配置");
-        help(source, "maxTnt <数量>", "最大单侧药量");
-        help(source, "resetTick", "清空基准与样本");
-        help(source, "selectTick <tick>", "选择基准 tick");
-        help(source, "give [ender_pearl|snowball]", "发放标定投掷物");
-        help(source, "rom order <顺序>", "ROM 三段顺序");
-        help(source, "rom red|blue <w1,w2,...>", "红/蓝权重");
-        help(source, "rom red|blue inverse <w1,w2,...>", "红/蓝权重（镜像）");
-        help(source, "rom show", "查看 ROM");
+        String text = helpText();
+
+        if (source.getEntity() instanceof ServerPlayer player
+                && ServerPlayNetworking.canSend(player, PearlCannonPayloads.HelpPayload.TYPE))
+        {
+            ServerPlayNetworking.send(player, new PearlCannonPayloads.HelpPayload("配置器", text));
+            return;
+        }
+
+        Messages.send(source, "d 珍珠炮 ", "g 配置器");
+        for (String line : text.split("\n"))
+        {
+            int tab = line.indexOf('\t');
+            String command = tab < 0 ? line : line.substring(0, tab);
+            String description = tab < 0 ? "" : line.substring(tab + 1);
+            Messages.send(source, "g " + command + (description.isEmpty() ? "" : "  " + description));
+        }
     }
 
-    private static void help(CommandSourceStack source, String command, String description)
+    private static String helpText()
     {
-        Messages.send(source, "g   " + Format.padEnd(command, 37) + description);
+        return String.join("\n",
+                "/pearlCannonConfig start <名称>\t开始配置",
+                "/pearlCannonConfig stop\t结束配置",
+                "/pearlCannonConfig list\t列出配置",
+                "/pearlCannonConfig info\t查看当前配置",
+                "/pearlCannonConfig delete <名称>\t删除配置",
+                "/pearlCannonConfig maxTnt <数量>\t最大单侧药量",
+                "/pearlCannonConfig resetTick\t清空基准与样本",
+                "/pearlCannonConfig selectTick <tick>\t选择基准 tick",
+                "/pearlCannonConfig give [ender_pearl|snowball]\t发放标定投掷物",
+                "/pearlCannonConfig rom order <顺序>\tROM 三段顺序",
+                "/pearlCannonConfig rom red|blue <w1,w2,...>\t红/蓝权重",
+                "/pearlCannonConfig rom red|blue inverse <w1,w2,...>\t红/蓝权重（镜像）",
+                "/pearlCannonConfig rom show\t查看 ROM");
     }
 }

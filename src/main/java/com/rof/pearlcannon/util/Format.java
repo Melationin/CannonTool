@@ -28,22 +28,4 @@ public final class Format
     {
         return String.format(Locale.ROOT, "%.5f", value);
     }
-
-    /** 按显示宽度补空格（中文按 2 格），用于聊天栏的说明列对齐。 */
-    public static String padEnd(String text, int width)
-    {
-        int current = displayWidth(text);
-        if (current >= width) return text + " ";
-        return text + " ".repeat(width - current);
-    }
-
-    private static int displayWidth(String text)
-    {
-        int width = 0;
-        for (int index = 0; index < text.length(); index++)
-        {
-            width += text.charAt(index) >= 0x2E80 ? 2 : 1;
-        }
-        return width;
-    }
 }

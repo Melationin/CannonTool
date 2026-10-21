@@ -68,6 +68,23 @@ public final class PearlCannonPayloads
         }
     }
 
+    /** 服务端 -> 客户端：帮助行，title 为标题，text 为 command\t描述 按行拼接。 */
+    public record HelpPayload(String title, String text) implements CustomPacketPayload
+    {
+        public static final CustomPacketPayload.Type<HelpPayload> TYPE = payloadType("help");
+
+        public static final StreamCodec<RegistryFriendlyByteBuf, HelpPayload> CODEC = StreamCodec.composite(
+                ByteBufCodecs.STRING_UTF8, HelpPayload::title,
+                ByteBufCodecs.STRING_UTF8, HelpPayload::text,
+                HelpPayload::new);
+
+        @Override
+        public CustomPacketPayload.Type<? extends CustomPacketPayload> type()
+        {
+            return TYPE;
+        }
+    }
+
     private PearlCannonPayloads() {}
 
     private static boolean registered;
@@ -81,10 +98,12 @@ public final class PearlCannonPayloads
         PayloadTypeRegistry.serverboundPlay().register(PullRequestPayload.TYPE, PullRequestPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(ConfigPayload.TYPE, ConfigPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(PullResultPayload.TYPE, PullResultPayload.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(HelpPayload.TYPE, HelpPayload.CODEC);
         //?} else {
         /*PayloadTypeRegistry.playC2S().register(PullRequestPayload.TYPE, PullRequestPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(ConfigPayload.TYPE, ConfigPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(PullResultPayload.TYPE, PullResultPayload.CODEC);
+        PayloadTypeRegistry.playS2C().register(HelpPayload.TYPE, HelpPayload.CODEC);
         *///?}
     }
 
