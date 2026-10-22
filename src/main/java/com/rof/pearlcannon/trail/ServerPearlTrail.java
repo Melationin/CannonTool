@@ -27,20 +27,18 @@ import java.util.UUID;
 //?}
 
 /**
- * 服务端珍珠轨迹：每个玩家最多一条，珍珠消失后保留已画出的轨迹。
- * <p>每 2 tick 采样一次、固定 501 个顶点，覆盖最近 1000 tick；顶点数固定，
- * 避免服务端虚拟 display 每 tick 重建。</p>
+ * 服务端珍珠轨迹：每个玩家最多一条，逐 tick 画线段，珍珠消失后保留已画轨迹。
+ * <p>每个 tick 的位移单独建一段，最多保留最近 1000 段（1000 tick）；段数上限只影响
+ * 历史长度，不会一次性预创建全部 display。</p>
  */
 public final class ServerPearlTrail
 {
     //? =26.1 {
-    private static final int SAMPLES = 501;
-    private static final int SAMPLE_INTERVAL = 2;
+    private static final int MAX_SEGMENTS = 1000;
     private static final Map<UUID, Trail> TRAILS = new HashMap<>();
 
     private static String filter;
     private static boolean initialized;
-    private static int tick;
 
     private ServerPearlTrail() {}
 
@@ -67,13 +65,11 @@ public final class ServerPearlTrail
     {
         filter = null;
         clearTrails();
-        tick = 0;
     }
 
     private static void onServerTick(MinecraftServer server)
     {
         if (filter == null) return;
-        tick++;
 
         Map<UUID, ThrownEnderpearl> active = new HashMap<>();
         for (ServerLevel level : server.getAllLevels())
@@ -104,10 +100,7 @@ public final class ServerPearlTrail
                 TRAILS.put(playerId, trail);
             }
 
-            if (tick % SAMPLE_INTERVAL == 0)
-            {
-                trail.add(pearl.position());
-            }
+            trail.add(pearl.position());
         }
 
         // 珍珠实体消失后只冻结轨迹，不删除已经画出的路径。
@@ -150,57 +143,71 @@ public final class ServerPearlTrail
 
     private static final class Trail
     {
-        private final Identifier id;
-        private final StripLineShape shape;
-        private final List<Vec3> points = new ArrayList<>(SAMPLES);
+        private final UUID playerId;
+        private final ServerLevel level;
+        private final Color color;
+        private final List<Segment> segments = new ArrayList<>();
         private UUID pearlId;
-        private int filled = 1;
+        private Vec3 lastPosition;
+        private int sequence;
 
         private Trail(UUID playerId, ThrownEnderpearl pearl)
         {
-            pearlId = pearl.getUUID();
-            id = Identifier.fromNamespaceAndPath(PearlCannon.MOD_ID, "trail/" + playerId);
-            Vec3 start = pearl.position();
-            for (int i = 0; i < SAMPLES; i++)
-            {
-                points.add(start.add(0, i * 0.001, 0));
-            }
-
-            shape = ShapeGenerator.generateStripLine()
-                    .level((ServerLevel) pearl.level())
-                    .vertexes(points)
-                    .lineWidth(0.08f)
-                    .color(colorFor(pearl))
-                    .seeThrough(true)
-                    .build();
-            ShapeManagers.addShape(id, shape);
+            this.playerId = playerId;
+            this.level = (ServerLevel) pearl.level();
+            this.color = colorFor(pearl);
+            this.pearlId = pearl.getUUID();
+            this.lastPosition = pearl.position();
         }
 
         private void add(Vec3 position)
         {
-            if (filled < SAMPLES)
+            if (lastPosition == null)
             {
-                points.set(filled, position);
-                filled++;
-                for (int i = filled; i < SAMPLES; i++)
-                {
-                    points.set(i, position.add(0, (i - filled + 1) * 0.001, 0));
-                }
+                lastPosition = position;
+                return;
             }
-            else
+            if (lastPosition.distanceToSqr(position) < 1.0E-6)
             {
-                for (int i = 1; i < SAMPLES; i++)
-                {
-                    points.set(i - 1, points.get(i));
-                }
-                points.set(SAMPLES - 1, position);
+                return;
             }
-            shape.setVertexes(points);
+
+            segments.add(new Segment(level, playerId, sequence++, lastPosition, position, color));
+            if (segments.size() > MAX_SEGMENTS)
+            {
+                segments.removeFirst().remove();
+            }
+            lastPosition = position;
         }
 
         private void freeze()
         {
             pearlId = null;
+        }
+
+        private void remove()
+        {
+            for (Segment segment : segments) segment.remove();
+            segments.clear();
+        }
+    }
+
+    private static final class Segment
+    {
+        private final Identifier id;
+        private final StripLineShape shape;
+
+        private Segment(ServerLevel level, UUID playerId, int sequence, Vec3 start, Vec3 end, Color color)
+        {
+            id = Identifier.fromNamespaceAndPath(PearlCannon.MOD_ID, "trail/" + playerId + "/" + sequence);
+            shape = ShapeGenerator.generateStripLine()
+                    .level(level)
+                    .vertexes(List.of(start, end))
+                    .lineWidth(0.08f)
+                    .color(color)
+                    .seeThrough(true)
+                    .build();
+            ShapeManagers.addShape(id, shape);
         }
 
         private void remove()

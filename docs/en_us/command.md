@@ -58,7 +58,7 @@ Commands have two roots: `/cannon` runs on the server and requires OP (`commands
 
 &emsp;&emsp;- `/cannon calc plane <name> <x> <z> <y> [maxTicks] - Plane mode using the server configuration directly`
 
-&emsp;&emsp;- `/cannon trail <name|off> - Draw matching ender pearl trails on the server; one trail per player, one segment every 2 ticks, kept after the pearl disappears, up to 1000 ticks; off disables (26.1 only, requires Ryan's Server Rendering Kit)`
+&emsp;&emsp;- `/cannon trail <name|off> - Draw matching ender pearl trails on the server; one trail per player, one segment per tick, kept after the pearl disappears, up to 1000 ticks; off disables (26.1 only, requires Ryan's Server Rendering Kit)`
 
 ## Calculator (cannonClient)
 
