@@ -3,7 +3,7 @@ package com.rof.pearlcannon.client;
 import java.util.ArrayList;
 import java.util.List;
 
-/** 服务端配置名缓存，用于 /pearlCannonCalc pull 的补全。 */
+/** 服务端配置名缓存，用于 /cannonClient pull 的补全。 */
 public final class ServerCannonNames
 {
     private static List<String> names = List.of();

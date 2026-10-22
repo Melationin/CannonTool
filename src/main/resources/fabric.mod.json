@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "id": "pearlcannon",
+  "id": "cannontool",
   "version": "${modVer}",
 
-  "name": "Pearl Cannon Calculator",
+  "name": "CannonTool",
   "description": "In-game ender pearl/snowball cannon calibration and firing-solution calculator.",
   "authors": [
     "Zhddsj"
@@ -29,6 +29,6 @@
     "fabric-api": "*"
   },
   "suggests": {
-    "ryansrenderingkit": "*"
+    "ryansserverrenderingkit": "*"
   }
 }

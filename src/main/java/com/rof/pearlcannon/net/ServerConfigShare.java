@@ -53,7 +53,7 @@ public final class ServerConfigShare
         broadcastNames(player.level().getServer());
     }
 
-    /** 把当前配置名发给一个客户端，用于 /pearlCannonCalc pull 的补全。 */
+    /** 把当前配置名发给一个客户端，用于 /cannonClient pull 的补全。 */
     public static void sendNames(ServerPlayer player)
     {
         if (!ServerPlayNetworking.canSend(player, PearlCannonPayloads.ConfigNamesPayload.TYPE)) return;
@@ -86,7 +86,7 @@ public final class ServerConfigShare
 
         if (!ServerPlayNetworking.canSend(player, PearlCannonPayloads.ConfigPayload.TYPE))
         {
-            player.sendSystemMessage(prefix("客户端未安装珍珠炮", ChatFormatting.RED));
+            player.sendSystemMessage(prefix("客户端未安装 CannonTool", ChatFormatting.RED));
             return;
         }
 
@@ -109,7 +109,7 @@ public final class ServerConfigShare
 
     private static Component prefix(String text, ChatFormatting color)
     {
-        return Component.literal("[珍珠炮] ").withStyle(ChatFormatting.GOLD)
+        return Component.literal("[CannonTool] ").withStyle(ChatFormatting.GOLD)
                 .append(Component.literal(text).withStyle(color));
     }
 }

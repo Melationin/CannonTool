@@ -55,7 +55,7 @@ public final class PearlCannonCalc
         PearlCannonConfig config = ClientCannonConfigs.get(name);
         if (config == null)
         {
-            ClientMessages.fail(source, "r 本地没有配置 " + name, "g  ；执行 ", "g /pearlCannonCalc pull ", "g " + name);
+            ClientMessages.fail(source, "r 本地没有配置 " + name, "g  ；执行 ", "g /cannonClient pull ", "g " + name);
             return 0;
         }
         if (!config.hasReference())
@@ -76,7 +76,7 @@ public final class PearlCannonCalc
 
         if (plane)
         {
-            ClientMessages.send(source, "d 珍珠炮 ", "g 配置 ", "w " + name,
+            ClientMessages.send(source, "d CannonTool ", "g 配置 ", "w " + name,
                     "g  目标 ", "w " + Format.f2(targetX, targetZ),
                     "g  平面 y ", "w " + Format.f3(planeY),
                     "g  药量上限 ", "w " + (maxTnt <= 0 ? "不限" : String.valueOf(maxTnt)),
@@ -84,7 +84,7 @@ public final class PearlCannonCalc
         }
         else
         {
-            ClientMessages.send(source, "d 珍珠炮 ", "g 配置 ", "w " + name,
+            ClientMessages.send(source, "d CannonTool ", "g 配置 ", "w " + name,
                     "g  目标 ", "w " + Format.f2(targetX, targetZ),
                     "g  药量上限 ", "w " + (maxTnt <= 0 ? "不限" : String.valueOf(maxTnt)),
                     "g  tick 上限 ", "w " + ticks);
@@ -110,7 +110,7 @@ public final class PearlCannonCalc
                     "g   落点 ", "w " + Format.vec(solution.end()),
                     "g   误差 ", "y " + Format.f3(solution.error()),
                     "g   总数 ", "w " + (solution.blue() + solution.red()),
-                    "d   [展开]", "!/pearlCannonCalc expand " + index, "^ 点击查看详细信息");
+                    "d   [展开]", "!/cannonClient expand " + index, "^ 点击查看详细信息");
             source.sendFeedback(row);
         }
         return 1;
@@ -124,7 +124,7 @@ public final class PearlCannonCalc
         LastResults last = LAST_RESULTS.get(source.getPlayer().getUUID());
         if (last == null)
         {
-            ClientMessages.fail(source, "r 还没有计算结果，先执行 ", "g /pearlCannonCalc normal ", "g <名称> <x> <z>");
+            ClientMessages.fail(source, "r 还没有计算结果，先执行 ", "g /cannonClient normal ", "g <名称> <x> <z>");
             return 0;
         }
 
@@ -146,7 +146,7 @@ public final class PearlCannonCalc
         int total = solution.blue() + solution.red();
         Vec3 velocity = PearlCannonSolver.initialVelocity(config, solution.group(), solution.blue(), solution.red());
 
-        ClientMessages.send(source, "d 珍珠炮 ", "g 配置 ", "w " + last.configName(), "g  结果 ", "y #" + index);
+        ClientMessages.send(source, "d CannonTool ", "g 配置 ", "w " + last.configName(), "g  结果 ", "y #" + index);
         if (last.plane())
         {
             ClientMessages.send(source, "g   模式 ", "w 平面 y=" + Format.f3(last.planeY()));
@@ -163,7 +163,7 @@ public final class PearlCannonCalc
             MutableComponent colored = coloredCode(config.rom, solution.group(), code.redBits(), code.blueBits());
             ClientMessages.send(source, "g   配置编码 ", colored,
                     "g   ", "d [复制]", "&" + code.text(), "^ 点击复制配置编码",
-                    "g   ", "d [HUD]", "!/pearlCannonCalc hud " + index, "^ 点击显示在屏幕上");
+                    "g   ", "d [HUD]", "!/cannonClient hud " + index, "^ 点击显示在屏幕上");
             ClientMessages.send(source, "g   红阵列 ", "r " + PearlCannonRom.describeBits(config.rom.red, code.redBits()));
             ClientMessages.send(source, "g   蓝阵列 ", "c " + PearlCannonRom.describeBits(config.rom.blue, code.blueBits()));
         }
@@ -208,8 +208,8 @@ public final class PearlCannonCalc
 
         hudDisplay = Messages.c("g 配置编码 ",
                 coloredCode(config.rom, solution.group(), code.redBits(), code.blueBits()));
-        ClientMessages.send(source, "d 珍珠炮 ", "g 已显示配置编码；关闭：", "g /pearlCannonCalc hud off",
-                "!/pearlCannonCalc hud off", "^ 点击关闭");
+        ClientMessages.send(source, "d CannonTool ", "g 已显示配置编码；关闭：", "g /cannonClient hud off",
+                "!/cannonClient hud off", "^ 点击关闭");
         return 1;
     }
 
@@ -222,7 +222,7 @@ public final class PearlCannonCalc
             return 0;
         }
         hudDisplay = null;
-        ClientMessages.send(source, "d 珍珠炮 ", "g 已隐藏配置编码");
+        ClientMessages.send(source, "d CannonTool ", "g 已隐藏配置编码");
         return 1;
     }
 

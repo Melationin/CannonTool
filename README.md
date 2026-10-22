@@ -1,15 +1,15 @@
-## Pearl Cannon Calculator / 珍珠炮计算器
+## CannonTool / 珍珠炮计算器
 
 一个独立运行的 Fabric 模组：在游戏内标定珍珠炮各组阵列的推力，并按目标坐标反解装药方案、输出二进制码。
 
-不依赖 Carpet。服务端配置器（`/pearlCannonConfig`）负责标定与配置，客户端计算器（`/pearlCannonCalc`）负责计算；两侧的配置分别存储，格式都是「一炮一个 json」。
+不依赖 Carpet。服务端配置器（`/cannon`）负责标定、配置与服务端计算，客户端计算器（`/cannonClient`）负责本地计算；两侧的配置分别存储，格式都是「一炮一个 json」。
 
 ## 前置模组
 
 | 名称 | 类型 | 链接 | 备注 |
 |------|------|------|------|
 | Fabric API | 必须 | [Modrinth](https://modrinth.com/mod/fabric-api) | - |
-| [Ryan's Rendering Kit](https://github.com/hotpad100c/ryansrenderingkit) | 可选 | [Modrinth](https://modrinth.com/mod/ryansrenderingkit) | 仅 26.1 轨迹显示需要；版本 1.3.0+26.1 |
+| [Ryan's Server Rendering Kit](https://github.com/hotpad100c/ryansrenderingkit) | 可选 | GitHub | 仅 26.1 的 `/cannon trail` 需要；版本 1.2.0+26.1 |
 
 ## 版本支持
 
@@ -18,34 +18,37 @@
 | 1.21.5 / 1.21.6 / 1.21.8 / 1.21.9 / 1.21.11 | 支持 |
 | 26.1 / 26.2 / 26.3 | 支持 |
 
-轨迹显示仅支持 **26.1**，且需要安装 Ryan's Rendering Kit；其它版本没有 `trail` 命令。
+服务端轨迹显示仅支持 **26.1**，且需要安装 Ryan's Server Rendering Kit；其它版本没有 `trail` 命令。
 
 ## 快速开始
 
 服务端（需要 OP，在世界里标定）：
 
 ```
-/pearlCannonConfig start zzp1           # 开始配置
-/pearlCannonConfig give                 # 领取 8 颗已命名的末影珍珠（give snowball 换雪球）
+/cannon start zzp1           # 开始配置
+/cannon give                 # 领取 8 颗已命名的末影珍珠（give snowball 换雪球）
 # 投掷第一颗珍珠/雪球 → 在聊天栏点击选择一个基准 tick
 # 依次投掷其余 7 颗（以及可选的 zzp1:ZZ 空配置）
-/pearlCannonConfig maxTnt 3000          # 设置最大单侧药量
-/pearlCannonConfig rom order RBD        # 设置红/蓝/方向三段的排列
-/pearlCannonConfig rom red  8,4,2,1,4480,2240,1120,560,10,20,40,80,160,240
-/pearlCannonConfig rom blue 240,160,80,40,20,10,560,1120,2240,4480,1,2,4,8 inverse
+/cannon maxTnt 3000          # 设置最大单侧药量
+/cannon rom order RBD        # 设置红/蓝/方向三段的排列
+/cannon rom red  8,4,2,1,4480,2240,1120,560,10,20,40,80,160,240
+/cannon rom blue 240,160,80,40,20,10,560,1120,2240,4480,1,2,4,8 inverse
+
+/cannon calc normal zzp1 1635 -122 256   # 服务端直接读取服务端配置计算
+/cannon calc plane  zzp1 1635 -122 64 256
+/cannon trail zzp1                       # 服务端显示名称匹配 zzp1 的珍珠轨迹（26.1，需 Ryan's Server Rendering Kit）
+/cannon trail off                        # 关闭轨迹显示
 ```
 
 客户端（不需要 OP，把配置拉到本地后计算）：
 
 ```
-/pearlCannonCalc push zzp1              # 把本地配置推送到服务端（需要 OP）
-/pearlCannonCalc pull zzp1              # 从服务端拉取配置到本地
-/pearlCannonCalc list                   # 查看本地已有配置
-/pearlCannonCalc normal zzp1 1635 -122 256
-/pearlCannonCalc plane  zzp1 1635 -122 64 256
-/pearlCannonCalc hud 1                  # 把第 1 条结果的配置编码持续显示在动作栏
-/pearlCannonCalc trail zzp1             # 显示名称匹配 zzp1 的珍珠轨迹（26.1，需 Ryan's Rendering Kit）
-/pearlCannonCalc trail off              # 关闭轨迹显示
+/cannonClient push zzp1              # 把本地配置推送到服务端（需要 OP）
+/cannonClient pull zzp1              # 从服务端拉取配置到本地
+/cannonClient list                   # 查看本地已有配置
+/cannonClient normal zzp1 1635 -122 256
+/cannonClient plane  zzp1 1635 -122 64 256
+/cannonClient hud 1                  # 把第 1 条结果的配置编码持续显示在动作栏
 ```
 
 也可以不走拉取：把服务端的 `<world>/pearlcannon/zzp1.json` 手动复制到 `.minecraft/config/pearlcannon/zzp1.json`，下次计算会自动读取。
@@ -56,6 +59,8 @@
 |----|------|------|
 | 服务端 | `<world>/pearlcannon/<名称>.json` | 标定产生的配置 |
 | 客户端 | `.minecraft/config/pearlcannon/<名称>.json` | 计算使用的配置；`pull` 或手动复制 |
+
+> 配置目录沿用 `pearlcannon`，避免已有存档的配置失效。
 
 ## 文档
 
@@ -73,6 +78,6 @@ English:
 .\gradlew.bat :1.21.5:build -x test
 ```
 
-26.1 调试轨迹时，把 `libs/ryansrenderingkit-1.3.0+26.1.jar` 复制到 `run/mods/`；发布使用时放进 `mods/`。
+26.1 调试轨迹时，把 `libs/ryansserverrenderingkit-1.2.0+26.1.jar` 复制到 `run/mods/`；发布使用时放进服务端的 `mods/`（单人游戏放客户端 `mods/`）。
 
 产物在 `versions/<版本>/build/libs/`。

@@ -13,15 +13,13 @@ import com.rof.pearlcannon.config.PearlCannonConfig;
 import com.rof.pearlcannon.net.PearlCannonPayloads;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.commands.SharedSuggestionProvider;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
  * 客户端命令：计算、本地配置列表与拉取。
- * <p>服务端配置命令是独立的 /pearlCannonConfig，客户端不再需要转发。</p>
+ * <p>服务端配置命令是独立的 /cannon，客户端不再需要转发。</p>
  */
 public final class PearlCannonClientCommands
 {
@@ -31,23 +29,11 @@ public final class PearlCannonClientCommands
     private static final SuggestionProvider<FabricClientCommandSource> SERVER_CONFIG_SUGGESTIONS =
             (context, builder) -> SharedSuggestionProvider.suggest(ServerCannonNames.names(), builder);
 
-    private static final SuggestionProvider<FabricClientCommandSource> TRAIL_SUGGESTIONS =
-            (context, builder) ->
-            {
-                List<String> names = new ArrayList<>(ServerCannonNames.names());
-                for (String name : ClientCannonConfigs.names())
-                {
-                    if (!names.contains(name)) names.add(name);
-                }
-                names.add("off");
-                return SharedSuggestionProvider.suggest(names, builder);
-            };
-
     private PearlCannonClientCommands() {}
 
     public static void register(CommandDispatcher<FabricClientCommandSource> dispatcher)
     {
-        LiteralArgumentBuilder<FabricClientCommandSource> root = literal("pearlCannonCalc")
+        LiteralArgumentBuilder<FabricClientCommandSource> root = literal("cannonClient")
                 .executes(context ->
                 {
                     sendHelp(context.getSource());
@@ -60,12 +46,6 @@ public final class PearlCannonClientCommands
         root.then(hudCommand());
         root.then(pushCommand());
         root.then(pullCommand());
-        //? =26.1 {
-        if (FabricLoader.getInstance().isModLoaded("ryansrenderingkit"))
-        {
-            root.then(trailCommand());
-        }
-        //?}
         root.then(literal("list").executes(context ->
         {
             listConfigs(context.getSource());
@@ -112,7 +92,7 @@ public final class PearlCannonClientCommands
         return literal("hud")
                 .executes(context ->
                 {
-                    ClientMessages.fail(context.getSource(), "r 用法：", "g /pearlCannonCalc hud <序号|off>");
+                    ClientMessages.fail(context.getSource(), "r 用法：", "g /cannonClient hud <序号|off>");
                     return 0;
                 })
                 .then(literal("off").executes(PearlCannonCalc::hideHud))
@@ -139,43 +119,12 @@ public final class PearlCannonClientCommands
         }
         if (!ClientPlayNetworking.canSend(PearlCannonPayloads.PushConfigPayload.TYPE))
         {
-            ClientMessages.fail(source, "r 服务端没有安装珍珠炮");
+            ClientMessages.fail(source, "r 服务端没有安装 CannonTool");
             return 0;
         }
 
         ClientPlayNetworking.send(new PearlCannonPayloads.PushConfigPayload(name, json));
-        ClientMessages.send(source, "d 珍珠炮 ", "g 正在发送配置 ", "w " + name);
-        return 1;
-    }
-
-    private static LiteralArgumentBuilder<FabricClientCommandSource> trailCommand()
-    {
-        return literal("trail")
-                .executes(context -> trail(context, "off"))
-                .then(argument("name", StringArgumentType.greedyString())
-                        .suggests(TRAIL_SUGGESTIONS)
-                        .executes(context -> trail(context, StringArgumentType.getString(context, "name"))));
-    }
-
-    private static int trail(CommandContext<FabricClientCommandSource> context, String value)
-    {
-        FabricClientCommandSource source = context.getSource();
-        if (value.equalsIgnoreCase("off"))
-        {
-            PearlTrailRenderer.clear();
-            ClientMessages.send(source, "d 珍珠炮 ", "g 已关闭珍珠轨迹");
-            return 1;
-        }
-
-        String filter = value.strip();
-        if (filter.isEmpty())
-        {
-            ClientMessages.fail(source, "r 名称不能为空");
-            return 0;
-        }
-
-        PearlTrailRenderer.setFilter(filter);
-        ClientMessages.send(source, "d 珍珠炮 ", "g 珍珠轨迹过滤：", "w " + filter);
+        ClientMessages.send(source, "d CannonTool ", "g 正在发送配置 ", "w " + name);
         return 1;
     }
 
@@ -193,12 +142,12 @@ public final class PearlCannonClientCommands
         FabricClientCommandSource source = context.getSource();
         if (!ClientPlayNetworking.canSend(PearlCannonPayloads.PullRequestPayload.TYPE))
         {
-            ClientMessages.fail(source, "r 当前服务器没有安装珍珠炮服务端，无法拉取配置");
+            ClientMessages.fail(source, "r 当前服务器没有安装 CannonTool 服务端，无法拉取配置");
             return 0;
         }
 
         ClientPlayNetworking.send(new PearlCannonPayloads.PullRequestPayload(name));
-        ClientMessages.send(source, "d 珍珠炮 ", "g 正在从服务端拉取 ", "w " + (name.isEmpty() ? "全部配置" : name));
+        ClientMessages.send(source, "d CannonTool ", "g 正在从服务端拉取 ", "w " + (name.isEmpty() ? "全部配置" : name));
         return 1;
     }
 
@@ -207,11 +156,11 @@ public final class PearlCannonClientCommands
         List<String> names = ClientCannonConfigs.names();
         if (names.isEmpty())
         {
-            ClientMessages.send(source, "d 珍珠炮 ", "g 本地还没有配置；执行 ", "g /pearlCannonCalc pull ", "g <名称>");
+            ClientMessages.send(source, "d CannonTool ", "g 本地还没有配置；执行 ", "g /cannonClient pull ", "g <名称>");
             return;
         }
 
-        ClientMessages.send(source, "d 珍珠炮 ", "g 本地配置 ", "w " + names.size(), "g  个");
+        ClientMessages.send(source, "d CannonTool ", "g 本地配置 ", "w " + names.size(), "g  个");
         for (String name : names)
         {
             PearlCannonConfig config = ClientCannonConfigs.get(name);
@@ -230,20 +179,14 @@ public final class PearlCannonClientCommands
 
     private static void sendHelp(FabricClientCommandSource source)
     {
-        ClientMessages.send(source, "d 珍珠炮 ", "g 计算器");
-        help(source, "/pearlCannonCalc normal <名称> <x> <z> [最大tick]", "tick 模式");
-        help(source, "/pearlCannonCalc plane <名称> <x> <z> <y> [最大tick]", "平面模式");
-        help(source, "/pearlCannonCalc expand <序号>", "展开结果");
-        help(source, "/pearlCannonCalc hud <序号|off>", "持续显示配置编码");
-        //? =26.1 {
-        if (FabricLoader.getInstance().isModLoaded("ryansrenderingkit"))
-        {
-            help(source, "/pearlCannonCalc trail <名称|off>", "显示指定名称的珍珠轨迹");
-        }
-        //?}
-        help(source, "/pearlCannonCalc push <名称>", "把本地配置发送到服务端");
-        help(source, "/pearlCannonCalc pull [名称]", "拉取配置");
-        help(source, "/pearlCannonCalc list", "查看本地配置");
+        ClientMessages.send(source, "d CannonTool ", "g 计算器");
+        help(source, "/cannonClient normal <名称> <x> <z> [最大tick]", "tick 模式");
+        help(source, "/cannonClient plane <名称> <x> <z> <y> [最大tick]", "平面模式");
+        help(source, "/cannonClient expand <序号>", "展开结果");
+        help(source, "/cannonClient hud <序号|off>", "持续显示配置编码");
+        help(source, "/cannonClient push <名称>", "把本地配置发送到服务端");
+        help(source, "/cannonClient pull [名称]", "拉取配置");
+        help(source, "/cannonClient list", "查看本地配置");
     }
 
     private static void help(FabricClientCommandSource source, String command, String description)

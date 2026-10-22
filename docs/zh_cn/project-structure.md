@@ -1,6 +1,6 @@
 # 项目结构
 
-Java 源码位于 `src/main/java/com/rof/pearlcannon/`，按职责分包。服务端负责标定与配置存储（`/pearlCannonConfig`），客户端负责计算与本地配置（`/pearlCannonCalc`）。
+Java 源码位于 `src/main/java/com/rof/pearlcannon/`，按职责分包。服务端负责标定、配置存储与服务端计算（`/cannon`），客户端负责本地计算与本地配置（`/cannonClient`）。
 
 ```text
 com/rof/pearlcannon/
@@ -9,14 +9,15 @@ com/rof/pearlcannon/
 │   └── PearlCalibration.java           # 珍珠/雪球标定（服务端）：命名解析、Δv 采样、基准 tick、清理
 ├── client/
 │   ├── PearlCannonClient.java          # 客户端入口：本地命令、配置编码 HUD、接收服务端配置
-│   ├── PearlCannonClientCommands.java  # /pearlCannonCalc normal|plane|expand|hud|trail|push|pull|list
+│   ├── PearlCannonClientCommands.java  # /cannonClient normal|plane|expand|hud|push|pull|list
 │   ├── PearlCannonCalc.java            # 客户端求解、结果展示与配置编码 HUD
-│   ├── PearlTrailRenderer.java         # 名称过滤与珍珠轨迹渲染（仅 26.1，Ryan's Rendering Kit）
 │   ├── ClientCannonConfigs.java        # 客户端配置：config/pearlcannon/<名称>.json
 │   ├── ServerCannonNames.java          # 服务端配置名缓存（pull 补全）
 │   └── ClientMessages.java             # 客户端聊天输出
+├── trail/
+│   └── ServerPearlTrail.java           # 服务端名称过滤与珍珠轨迹（仅 26.1，Ryan's Server Rendering Kit）
 ├── command/
-│   └── PearlCannonConfigCommands.java  # 服务端命令树：/pearlCannonConfig ...
+│   └── PearlCannonConfigCommands.java  # 服务端命令树：/cannon ...
 ├── config/
 │   ├── PearlCannonConfig.java          # 单个炮台的配置数据（Gson POJO）
 │   ├── PearlCannonConfigs.java         # 服务端配置注册表：world/pearlcannon/<名称>.json
@@ -25,7 +26,7 @@ com/rof/pearlcannon/
 │   ├── PearlCannonPayloads.java        # pull/push 请求、配置下发、结束标记、配置名同步
 │   └── ServerConfigShare.java          # 服务端响应拉取请求
 ├── solver/
-│   └── PearlCannonSolver.java          # 求解器：tick 模式与平面模式（客户端调用）
+│   └── PearlCannonSolver.java          # 求解器：tick 模式与平面模式（客户端与服务端共用）
 ├── util/
 │   ├── CommandAccess.java              # 版本相关的命令权限判断
 │   ├── ConfigNames.java                # 配置名/文件名校验
@@ -38,9 +39,9 @@ com/rof/pearlcannon/
 
 ## 客户端与服务端
 
-- 服务端：`PearlCannonConfigCommands` 注册 `/pearlCannonConfig ...`；配置写入 `<world>/pearlcannon/<名称>.json`
-- 客户端：`PearlCannonClientCommands` 注册 `/pearlCannonCalc ...`（`normal`/`plane`/`expand`/`hud`/`pull`/`list`）；配置读取 `.minecraft/config/pearlcannon/<名称>.json`
-- 两个命令根互不重叠，客户端不需要转发服务端命令；`/pearlCannonConfig` 直接由服务端处理并校验 OP
+- 服务端：`PearlCannonConfigCommands` 注册 `/cannon ...`；配置写入 `<world>/pearlcannon/<名称>.json`；`/cannon calc` 直接读取服务端配置计算；`/cannon trail` 由 `trail/ServerPearlTrail` 渲染
+- 客户端：`PearlCannonClientCommands` 注册 `/cannonClient ...`（`normal`/`plane`/`expand`/`hud`/`push`/`pull`/`list`）；配置读取 `.minecraft/config/pearlcannon/<名称>.json`
+- 两个命令根互不重叠，客户端不需要转发服务端命令；`/cannon` 直接由服务端处理并校验 OP
 - 传输：客户端发 `pull_request`，服务端按需回 `config` 与 `pull_result`；不在同一台机器时也能同步
 - `solver/` 与 `config/PearlCannonConfig.java`、`PearlCannonRom.java` 两侧共用，保证计算逻辑一致
 

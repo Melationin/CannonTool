@@ -311,19 +311,19 @@ public final class PearlCalibration
 
     private static MutableComponent header(String text)
     {
-        return Component.literal("[珍珠炮] ").withStyle(ChatFormatting.GOLD)
+        return Component.literal("[CannonTool] ").withStyle(ChatFormatting.GOLD)
                 .append(Component.literal(text).withStyle(ChatFormatting.YELLOW));
     }
 
     private static MutableComponent ok(String text)
     {
-        return Component.literal("[珍珠炮] ").withStyle(ChatFormatting.GOLD)
+        return Component.literal("[CannonTool] ").withStyle(ChatFormatting.GOLD)
                 .append(Component.literal(text).withStyle(ChatFormatting.GREEN));
     }
 
     private static MutableComponent warn(String text)
     {
-        return Component.literal("[珍珠炮] ").withStyle(ChatFormatting.GOLD)
+        return Component.literal("[CannonTool] ").withStyle(ChatFormatting.GOLD)
                 .append(Component.literal(text).withStyle(ChatFormatting.RED));
     }
 
@@ -435,7 +435,7 @@ public final class PearlCalibration
                         new Pending(configName, key, dimension, origin, new ArrayList<>(samples))) != null;
                 if (replaced)
                 {
-                    send(server, ownerId, Component.literal("[珍珠炮] ").withStyle(ChatFormatting.GOLD)
+                    send(server, ownerId, Component.literal("[CannonTool] ").withStyle(ChatFormatting.GOLD)
                             .append(Component.literal("已替换上一次待选记录").withStyle(ChatFormatting.YELLOW)));
                 }
                 sendSelectionList();
@@ -512,7 +512,7 @@ public final class PearlCalibration
                                 "  #%d  Δv=%s  |Δv_xz|=%.4f", sample.tick(), formatVec(sample.delta()), horizontalLength(sample.delta())))
                         .withStyle(style -> style
                                 .withColor(ChatFormatting.YELLOW)
-                                .withClickEvent(new ClickEvent.RunCommand("/pearlCannonConfig selectTick " + sample.tick()))
+                                .withClickEvent(new ClickEvent.RunCommand("/cannon selectTick " + sample.tick()))
                                 .withHoverEvent(new HoverEvent.ShowText(Component.literal("点击设为基准 tick"))));
                 player.sendSystemMessage(line);
             }

@@ -3,17 +3,18 @@
 ## 项目与源码
 
 - 本项目是一个独立运行的 Fabric 模组（不依赖 Carpet），用于在游戏内标定珍珠炮并反解装药方案；标定可使用命名末影珍珠或雪球。
-- 架构按端拆分：**服务端**负责标定与配置（`/pearlCannonConfig ...`），**客户端**负责计算（`/pearlCannonCalc ...`）并保存自己的配置副本；客户端还可以用 `/pearlCannonCalc pull [名称]` 从服务端拉取配置，用 `/pearlCannonCalc hud <序号|off>` 把配置编码持续显示在动作栏。
+- 架构按端拆分：**服务端**负责标定与配置（`/cannon ...`），**客户端**负责计算（`/cannonClient ...`）并保存自己的配置副本；客户端还可以用 `/cannonClient pull [名称]` 从服务端拉取配置，用 `/cannonClient hud <序号|off>` 把配置编码持续显示在动作栏。
+- 服务端 `/cannon calc normal|plane ...` 直接读取服务端配置计算；`/cannon trail <名称|off>` 用 Ryan's Server Rendering Kit 在服务端画珍珠轨迹（仅 26.1）。
 - Minecraft 及各 Mod 的源码在 `F:\source`。确认原版行为、方法签名、Mixin 注入点时，优先查阅与目标版本匹配的源码。
 - 代码在 `src/main/java/com/rof/pearlcannon/`：`config/` 为配置数据与两端存储，`solver/` 为求解器，`calibration/` 为珍珠/雪球标定，`command/` 为服务端命令，`client/` 为客户端入口/命令/计算/HUD/本地存储，`net/` 为配置同步 payload，`util/` 为工具，`mixin/` 为注入。
 - 通用入口为 `PearlCannon`（`main`），客户端入口为 `client.PearlCannonClient`（`client`）；服务端命令通过 Fabric API 的 `CommandRegistrationCallback` 注册，客户端命令通过 `ClientCommandRegistrationCallback` 注册，服务器生命周期用 `ServerLifecycleEvents`，投掷物清理用 `ServerTickEvents`。
 - 存储位置：服务端 `<world>/pearlcannon/<名称>.json`；客户端 `.minecraft/config/pearlcannon/<名称>.json`。
-- 服务端与客户端命令根互不重叠（`/pearlCannonConfig` 与 `/pearlCannonCalc`），客户端不需要转发服务端命令；服务端仍按 OP 权限校验。
+- 服务端与客户端命令根互不重叠（`/cannon` 与 `/cannonClient`），客户端不需要转发服务端命令；服务端仍按 OP 权限校验。
 - 投掷物标定：`ThrowableProjectileCalibrationMixin` 统一在 `ThrowableProjectile.tick` 采样，`ProjectileHitCalibrationMixin` 同时注入 `ThrownEnderpearl` 和 `Snowball` 的 `onHit`；已移除的投掷物由 `PearlCalibration.onServerTick` 兜底结束。
 - 帮助只显示完整命令，说明放在命令的悬停提示里（`Messages` 的 `^` 段），不做单行表格对齐。
-- 服务端在玩家加入和配置增删时通过 `ConfigNamesPayload` 同步配置名，客户端缓存到 `ServerCannonNames`，供 `/pearlCannonCalc pull <名称>` 的补全使用。
-- `/pearlCannonCalc push <名称>` 读取客户端本地 json，经 `PushConfigPayload` 发到服务端；服务端校验 OP 后写入服务端配置，并通过 `PushResultPayload` 回执。
-- 轨迹显示：`PearlTrailRenderer` 按名称过滤 `ThrownEnderpearl`，用 Ryan's Rendering Kit 的 `StripLineShape` 逐 tick 追加点；仅 26.1 编译，库 jar 在 `libs/`，运行时需要安装该模组，其它版本是空实现。
+- 服务端在玩家加入和配置增删时通过 `ConfigNamesPayload` 同步配置名，客户端缓存到 `ServerCannonNames`，供 `/cannonClient pull <名称>` 的补全使用。
+- `/cannonClient push <名称>` 读取客户端本地 json，经 `PushConfigPayload` 发到服务端；服务端校验 OP 后写入服务端配置，并通过 `PushResultPayload` 回执。
+- 轨迹显示：`trail/ServerPearlTrail` 在服务端按名称过滤 `ThrownEnderpearl`，用 Ryan's Server Rendering Kit 的 `StripLineShape` 和虚拟 display 画线；仅 26.1 编译，库 jar 在 `libs/`，其它版本是空实现。
 
 ## 编码风格
 

@@ -6,7 +6,6 @@ import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallba
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.network.chat.Component;
 
 /** 客户端入口：注册本地命令、接收服务端下发的配置并写入本地文件夹。 */
@@ -20,18 +19,11 @@ public class PearlCannonClient implements ClientModInitializer
         ClientCommandRegistrationCallback.EVENT.register((dispatcher, buildContext) ->
                 PearlCannonClientCommands.register(dispatcher));
 
-        //? =26.1 {
-        if (FabricLoader.getInstance().isModLoaded("ryansrenderingkit"))
-        {
-            PearlTrailRenderer.init();
-        }
-        //?}
-
         ClientPlayNetworking.registerGlobalReceiver(PearlCannonPayloads.ConfigPayload.TYPE, (payload, context) ->
         {
             if (!ClientCannonConfigs.save(payload.name(), payload.json()))
             {
-                ClientMessages.send("d 珍珠炮 ", "r 保存配置 " + payload.name() + " 失败");
+                ClientMessages.send("d CannonTool ", "r 保存配置 " + payload.name() + " 失败");
             }
         });
 
@@ -39,11 +31,11 @@ public class PearlCannonClient implements ClientModInitializer
         {
             if (payload.error() != null && !payload.error().isEmpty())
             {
-                ClientMessages.send("d 珍珠炮 ", "r " + payload.error());
+                ClientMessages.send("d CannonTool ", "r " + payload.error());
             }
             else
             {
-                ClientMessages.send("d 珍珠炮 ", "l 已拉取 ", "w " + payload.count(), "l 个配置");
+                ClientMessages.send("d CannonTool ", "l 已拉取 ", "w " + payload.count(), "l 个配置");
             }
         });
 
@@ -54,11 +46,11 @@ public class PearlCannonClient implements ClientModInitializer
         {
             if (payload.error() == null || payload.error().isEmpty())
             {
-                ClientMessages.send("d 珍珠炮 ", "l 已发送配置 ", "w " + payload.name());
+                ClientMessages.send("d CannonTool ", "l 已发送配置 ", "w " + payload.name());
             }
             else
             {
-                ClientMessages.send("d 珍珠炮 ", "r " + payload.error());
+                ClientMessages.send("d CannonTool ", "r " + payload.error());
             }
         });
 

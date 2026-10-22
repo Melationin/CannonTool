@@ -1,6 +1,7 @@
 package com.rof.pearlcannon.command;
 
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.DoubleArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
@@ -12,6 +13,8 @@ import com.rof.pearlcannon.config.PearlCannonConfig;
 import com.rof.pearlcannon.config.PearlCannonConfigs;
 import com.rof.pearlcannon.config.PearlCannonRom;
 import com.rof.pearlcannon.net.ServerConfigShare;
+import com.rof.pearlcannon.solver.PearlCannonSolver;
+import com.rof.pearlcannon.trail.ServerPearlTrail;
 import com.rof.pearlcannon.util.CommandAccess;
 import com.rof.pearlcannon.util.ConfigNames;
 import com.rof.pearlcannon.util.Format;
@@ -27,11 +30,13 @@ import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.fabricmc.loader.api.FabricLoader;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-/** 服务端珍珠炮配置命令：标定、药量上限与 ROM。计算在客户端执行。 */
+/** 服务端命令：标定、配置、ROM、服务端计算与轨迹。 */
 public final class PearlCannonConfigCommands
 {
     private static final SuggestionProvider<CommandSourceStack> CONFIG_SUGGESTIONS =
@@ -45,6 +50,14 @@ public final class PearlCannonConfigCommands
     private static final SuggestionProvider<CommandSourceStack> GIVE_SUGGESTIONS =
             (context, builder) -> SharedSuggestionProvider.suggest(GIVE_TYPES, builder);
 
+    private static final SuggestionProvider<CommandSourceStack> TRAIL_SUGGESTIONS =
+            (context, builder) ->
+            {
+                List<String> names = new ArrayList<>(PearlCannonConfigs.names());
+                names.add("off");
+                return SharedSuggestionProvider.suggest(names, builder);
+            };
+
     private record Active(String name, PearlCannonConfig config) {}
 
     private PearlCannonConfigCommands() {}
@@ -56,13 +69,21 @@ public final class PearlCannonConfigCommands
 
     private static LiteralArgumentBuilder<CommandSourceStack> rootCommand()
     {
-        LiteralArgumentBuilder<CommandSourceStack> root = Commands.literal("pearlCannonConfig")
+        LiteralArgumentBuilder<CommandSourceStack> root = Commands.literal("cannon")
                 .requires(CommandAccess::canUse)
                 .executes(context ->
                 {
                     sendHelp(context.getSource());
                     return 1;
                 });
+
+        root.then(calcCommand());
+        //? =26.1 {
+        if (FabricLoader.getInstance().isModLoaded("ryansserverrenderingkit"))
+        {
+            root.then(trailCommand());
+        }
+        //?}
 
         root.then(Commands.literal("start")
                 .then(Commands.argument("name", StringArgumentType.word())
@@ -103,7 +124,7 @@ public final class PearlCannonConfigCommands
                             String name = StringArgumentType.getString(context, "name");
                             if (PearlCannonConfigs.remove(name))
                             {
-                                Messages.send(context.getSource(), "d 珍珠炮 ", "g 已删除配置 ", "w " + name);
+                                Messages.send(context.getSource(), "d CannonTool ", "g 已删除配置 ", "w " + name);
                                 ServerConfigShare.broadcastNames(context.getSource().getServer());
                             }
                             else
@@ -127,7 +148,7 @@ public final class PearlCannonConfigCommands
                     String name = PearlCalibration.sessionName(player.getUUID());
                     if (name == null)
                     {
-                        Messages.fail(context.getSource(), "r 请先执行 ", "g /pearlCannonConfig start ", "g <名称>");
+                        Messages.fail(context.getSource(), "r 请先执行 ", "g /cannon start ", "g <名称>");
                         return 0;
                     }
                     PearlCalibration.resetTick(player, name);
@@ -195,7 +216,7 @@ public final class PearlCannonConfigCommands
         String name = PearlCalibration.sessionName(player.getUUID());
         if (name == null)
         {
-            Messages.fail(source, "r 请先执行 ", "g /pearlCannonConfig start ", "g <名称>");
+            Messages.fail(source, "r 请先执行 ", "g /cannon start ", "g <名称>");
             return null;
         }
         PearlCannonConfig config = PearlCannonConfigs.get(name);
@@ -216,7 +237,7 @@ public final class PearlCannonConfigCommands
         if (active == null) return 0;
         PearlCannonConfig config = active.config();
 
-        Messages.send(source, "d 珍珠炮 ", "g 配置 ", "w " + active.name());
+        Messages.send(source, "d CannonTool ", "g 配置 ", "w " + active.name());
         Messages.send(source, "g 维度 ", "w " + (config.dimension.isEmpty() ? "未知" : config.dimension),
                 "g   原点 ", "w " + Format.vec(config.origin.toVec3()));
         Messages.send(source, "g 最大单侧药量 ", "w " + (config.maxTnt <= 0 ? "不限" : String.valueOf(config.maxTnt)));
@@ -277,7 +298,7 @@ public final class PearlCannonConfigCommands
         int value = IntegerArgumentType.getInteger(context, "n");
         active.config().maxTnt = value;
         PearlCannonConfigs.save(active.name());
-        Messages.send(source, "d 珍珠炮 ", "g 最大单侧药量 = ", "w " + (value <= 0 ? "不限" : String.valueOf(value)));
+        Messages.send(source, "d CannonTool ", "g 最大单侧药量 = ", "w " + (value <= 0 ? "不限" : String.valueOf(value)));
         return 1;
     }
 
@@ -296,7 +317,7 @@ public final class PearlCannonConfigCommands
 
         active.config().rom.order = order;
         PearlCannonConfigs.save(active.name());
-        Messages.send(source, "d 珍珠炮 ", "g ROM 顺序 = ", "w " + order,
+        Messages.send(source, "d CannonTool ", "g ROM 顺序 = ", "w " + order,
                 "g （", "w " + PearlCannonRom.orderDisplay(order), "g ）");
         return 1;
     }
@@ -323,7 +344,7 @@ public final class PearlCannonConfigCommands
         else active.config().rom.blue = weights;
         PearlCannonConfigs.save(active.name());
 
-        Messages.send(source, "d 珍珠炮 ", red ? "r 红权重 " : "c 蓝权重 ", "w " + PearlCannonRom.formatWeights(weights),
+        Messages.send(source, "d CannonTool ", red ? "r 红权重 " : "c 蓝权重 ", "w " + PearlCannonRom.formatWeights(weights),
                 "g  共 ", "w " + PearlCannonRom.total(weights),
                 inverse ? "f  （inverse：已镜像保存）" : "");
         return 1;
@@ -335,13 +356,13 @@ public final class PearlCannonConfigCommands
         if (active == null) return;
         PearlCannonConfig config = active.config();
 
-        Messages.send(source, "d 珍珠炮 ", "g 配置 ", "w " + active.name(), "g  的 ROM");
+        Messages.send(source, "d CannonTool ", "g 配置 ", "w " + active.name(), "g  的 ROM");
         if (!PearlCannonRom.configured(config.rom))
         {
             Messages.send(source, "r 未配置完整：需要顺序 + 红权重 + 蓝权重");
-            Messages.send(source, "g  /pearlCannonConfig rom order <" + String.join("|", PearlCannonRom.ORDERS) + ">");
-            Messages.send(source, "g  /pearlCannonConfig rom red <w1,w2,...>");
-            Messages.send(source, "g  /pearlCannonConfig rom blue <w1,w2,...>");
+            Messages.send(source, "g  /cannon rom order <" + String.join("|", PearlCannonRom.ORDERS) + ">");
+            Messages.send(source, "g  /cannon rom red <w1,w2,...>");
+            Messages.send(source, "g  /cannon rom blue <w1,w2,...>");
             return;
         }
 
@@ -398,7 +419,7 @@ public final class PearlCannonConfigCommands
             }
         }
 
-        Messages.send(source, "d 珍珠炮 ", "g 已发放 ", "w " + count, "g  颗", "w " + label, "g （配置 ", "w " + name, "g ）");
+        Messages.send(source, "d CannonTool ", "g 已发放 ", "w " + count, "g  颗", "w " + label, "g （配置 ", "w " + name, "g ）");
         if (!active.config().hasReference())
         {
             Messages.send(source, "g 第一颗珍珠/雪球后选择基准 tick");
@@ -411,10 +432,10 @@ public final class PearlCannonConfigCommands
         List<String> names = PearlCannonConfigs.names();
         if (names.isEmpty())
         {
-            Messages.send(source, "d 珍珠炮 ", "g 还没有任何配置");
+            Messages.send(source, "d CannonTool ", "g 还没有任何配置");
             return;
         }
-        Messages.send(source, "d 珍珠炮 ", "g 共 ", "w " + names.size(), "g  个配置：");
+        Messages.send(source, "d CannonTool ", "g 共 ", "w " + names.size(), "g  个配置：");
         for (String name : names)
         {
             PearlCannonConfig config = PearlCannonConfigs.get(name);
@@ -426,22 +447,135 @@ public final class PearlCannonConfigCommands
         }
     }
 
+    private static LiteralArgumentBuilder<CommandSourceStack> trailCommand()
+    {
+        return Commands.literal("trail")
+                .executes(context -> trail(context, "off"))
+                .then(Commands.argument("name", StringArgumentType.greedyString())
+                        .suggests(TRAIL_SUGGESTIONS)
+                        .executes(context -> trail(context, StringArgumentType.getString(context, "name"))));
+    }
+
+    private static int trail(CommandContext<CommandSourceStack> context, String value)
+    {
+        CommandSourceStack source = context.getSource();
+        if (value.equalsIgnoreCase("off"))
+        {
+            ServerPearlTrail.clear();
+            Messages.send(source, "d CannonTool ", "g 已关闭珍珠轨迹");
+            return 1;
+        }
+
+        String filter = value.strip();
+        if (filter.isEmpty())
+        {
+            Messages.fail(source, "r 名称不能为空");
+            return 0;
+        }
+
+        ServerPearlTrail.setFilter(filter);
+        Messages.send(source, "d CannonTool ", "g 珍珠轨迹过滤：", "w " + filter);
+        return 1;
+    }
+
+    private static LiteralArgumentBuilder<CommandSourceStack> calcCommand()
+    {
+        return Commands.literal("calc")
+                .then(Commands.literal("normal")
+                        .then(Commands.argument("name", StringArgumentType.word())
+                                .suggests(CONFIG_SUGGESTIONS)
+                                .then(Commands.argument("x", DoubleArgumentType.doubleArg())
+                                        .then(Commands.argument("z", DoubleArgumentType.doubleArg())
+                                                .executes(context -> calculate(context, false, 256, 0.0))
+                                                .then(Commands.argument("maxTicks", IntegerArgumentType.integer(1, 2000))
+                                                        .executes(context -> calculate(context, false,
+                                                                IntegerArgumentType.getInteger(context, "maxTicks"), 0.0)))))))
+                .then(Commands.literal("plane")
+                        .then(Commands.argument("name", StringArgumentType.word())
+                                .suggests(CONFIG_SUGGESTIONS)
+                                .then(Commands.argument("x", DoubleArgumentType.doubleArg())
+                                        .then(Commands.argument("z", DoubleArgumentType.doubleArg())
+                                                .then(Commands.argument("y", DoubleArgumentType.doubleArg())
+                                                        .executes(context -> calculate(context, true, 256,
+                                                                DoubleArgumentType.getDouble(context, "y")))
+                                                        .then(Commands.argument("maxTicks", IntegerArgumentType.integer(1, 2000))
+                                                                .executes(context -> calculate(context, true,
+                                                                        IntegerArgumentType.getInteger(context, "maxTicks"),
+                                                                        DoubleArgumentType.getDouble(context, "y")))))))));
+    }
+
+    private static int calculate(CommandContext<CommandSourceStack> context, boolean plane, int maxTicks, double planeY)
+    {
+        CommandSourceStack source = context.getSource();
+        String name = StringArgumentType.getString(context, "name");
+        double x = DoubleArgumentType.getDouble(context, "x");
+        double z = DoubleArgumentType.getDouble(context, "z");
+
+        PearlCannonConfig config = PearlCannonConfigs.get(name);
+        if (config == null)
+        {
+            Messages.fail(source, "r 服务端没有配置 " + name);
+            return 0;
+        }
+        if (!config.hasReference())
+        {
+            Messages.fail(source, "r 配置 " + name + " 还没有基准 tick");
+            return 0;
+        }
+
+        List<PearlCannonSolver.Solution> results = plane
+                ? PearlCannonSolver.solvePlane(config, x, z, planeY, config.maxTnt, maxTicks)
+                : PearlCannonSolver.solve(config, x, z, config.maxTnt, maxTicks);
+
+        if (results.isEmpty())
+        {
+            Messages.fail(source, "r 没有找到可行解");
+            return 0;
+        }
+
+        Messages.send(source, "d CannonTool ", "g 计算 ", "w " + name, "g  → ",
+                "w " + Format.f3(x) + ", " + Format.f3(z) + (plane ? "  y=" + Format.f3(planeY) : ""),
+                "g   上限 ", "w " + maxTicks + " tick");
+
+        int index = 1;
+        for (PearlCannonSolver.Solution solution : results)
+        {
+            Messages.send(source, "g #" + index,
+                    "w  方向 ", "w " + solution.group(),
+                    "g  tick ", "w " + solution.ticks(),
+                    "g  蓝 ", "w " + solution.blue(),
+                    "g  红 ", "w " + solution.red(),
+                    "g  落点 ", "w " + Format.vec(solution.end()),
+                    "g  误差 ", "y " + Format.f3(solution.error()));
+            index++;
+        }
+        return 1;
+    }
+
     private static void sendHelp(CommandSourceStack source)
     {
-        Messages.send(source, "d 珍珠炮 ", "g 配置器");
-        help(source, "/pearlCannonConfig start <名称>", "开始配置");
-        help(source, "/pearlCannonConfig stop", "结束配置");
-        help(source, "/pearlCannonConfig list", "列出配置");
-        help(source, "/pearlCannonConfig info", "查看当前配置");
-        help(source, "/pearlCannonConfig delete <名称>", "删除配置");
-        help(source, "/pearlCannonConfig maxTnt <数量>", "最大单侧药量");
-        help(source, "/pearlCannonConfig resetTick", "清空基准与样本");
-        help(source, "/pearlCannonConfig selectTick <tick>", "选择基准 tick");
-        help(source, "/pearlCannonConfig give [ender_pearl|snowball]", "发放标定投掷物");
-        help(source, "/pearlCannonConfig rom order <顺序>", "ROM 三段顺序");
-        help(source, "/pearlCannonConfig rom red|blue <w1,w2,...>", "红/蓝权重");
-        help(source, "/pearlCannonConfig rom red|blue inverse <w1,w2,...>", "红/蓝权重（镜像）");
-        help(source, "/pearlCannonConfig rom show", "查看 ROM");
+        Messages.send(source, "d CannonTool ", "g 配置器");
+        help(source, "/cannon calc normal <名称> <x> <z> [最大tick]", "服务端 tick 计算");
+        help(source, "/cannon calc plane <名称> <x> <z> <y> [最大tick]", "服务端平面计算");
+        //? =26.1 {
+        if (FabricLoader.getInstance().isModLoaded("ryansserverrenderingkit"))
+        {
+            help(source, "/cannon trail <名称|off>", "服务端显示珍珠轨迹");
+        }
+        //?}
+        help(source, "/cannon start <名称>", "开始配置");
+        help(source, "/cannon stop", "结束配置");
+        help(source, "/cannon list", "列出配置");
+        help(source, "/cannon info", "查看当前配置");
+        help(source, "/cannon delete <名称>", "删除配置");
+        help(source, "/cannon maxTnt <数量>", "最大单侧药量");
+        help(source, "/cannon resetTick", "清空基准与样本");
+        help(source, "/cannon selectTick <tick>", "选择基准 tick");
+        help(source, "/cannon give [ender_pearl|snowball]", "发放标定投掷物");
+        help(source, "/cannon rom order <顺序>", "ROM 三段顺序");
+        help(source, "/cannon rom red|blue <w1,w2,...>", "红/蓝权重");
+        help(source, "/cannon rom red|blue inverse <w1,w2,...>", "红/蓝权重（镜像）");
+        help(source, "/cannon rom show", "查看 ROM");
     }
 
     private static void help(CommandSourceStack source, String command, String description)

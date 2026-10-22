@@ -11,7 +11,7 @@ import net.minecraft.network.chat.Style;
 /**
  * 简化的分段消息工具，沿用 Carpet 的写法：
  * <pre>
- * Messages.send(source, "d 珍珠炮 ", "g 配置 ", "w zzp1");
+ * Messages.send(source, "d CannonTool ", "g 配置 ", "w zzp1");
  * </pre>
  * 字段开头的字母是样式码（w 白、g 灰、y 黄、d 金、c 青、l 绿、r 红、f 深灰、i 斜体、b 粗体），
  * 后面必须跟一个空格再接文本；{@code !命令}、{@code &文本}、{@code ^提示} 分别作用在上一段上。
