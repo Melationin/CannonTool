@@ -36,7 +36,7 @@
 
 /cannon calc normal zzp1 1635 -122 256   # 服务端直接读取服务端配置计算
 /cannon calc plane  zzp1 1635 -122 64 256
-/cannon trail zzp1                       # 服务端显示轨迹：每个玩家一条，珍珠消失后保留，最长 1000 tick
+/cannon trail zzp1                       # 服务端显示轨迹：每玩家一条，每 2 tick 连线，最长 1000 tick
 /cannon trail off                        # 关闭轨迹显示
 ```
 

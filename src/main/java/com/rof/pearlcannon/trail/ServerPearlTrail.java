@@ -28,14 +28,14 @@ import java.util.UUID;
 
 /**
  * 服务端珍珠轨迹：每个玩家最多一条，珍珠消失后保留已画出的轨迹。
- * <p>固定 100 个顶点、每 10 tick 采样一次，覆盖最近 1000 tick；顶点数固定，
+ * <p>每 2 tick 采样一次、固定 501 个顶点，覆盖最近 1000 tick；顶点数固定，
  * 避免服务端虚拟 display 每 tick 重建。</p>
  */
 public final class ServerPearlTrail
 {
     //? =26.1 {
-    private static final int SAMPLES = 100;
-    private static final int SAMPLE_INTERVAL = 10;
+    private static final int SAMPLES = 501;
+    private static final int SAMPLE_INTERVAL = 2;
     private static final Map<UUID, Trail> TRAILS = new HashMap<>();
 
     private static String filter;

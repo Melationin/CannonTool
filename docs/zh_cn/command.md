@@ -58,7 +58,7 @@
 
 &emsp;&emsp;- `/cannon calc plane <名称> <x> <z> <y> [最大tick] - 直接读取服务端配置做平面模式计算`
 
-&emsp;&emsp;- `/cannon trail <名称|off> - 在服务端显示名称匹配的末影珍珠轨迹；每个玩家最多一条，珍珠消失后保留已画轨迹，最长 1000 tick；off 关闭（仅 26.1，需 Ryan's Server Rendering Kit）`
+&emsp;&emsp;- `/cannon trail <名称|off> - 在服务端显示名称匹配的末影珍珠轨迹；每个玩家最多一条，每 2 tick 采样连线，珍珠消失后保留已画轨迹，最长 1000 tick；off 关闭（仅 26.1，需 Ryan's Server Rendering Kit）`
 
 ## 计算器 (cannonClient)
 

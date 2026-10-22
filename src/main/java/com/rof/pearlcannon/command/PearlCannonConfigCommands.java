@@ -482,7 +482,8 @@ public final class PearlCannonConfigCommands
         }
 
         ServerPearlTrail.setFilter(filter);
-        Messages.send(source, "d CannonTool ", "g 珍珠轨迹过滤：", "w " + filter);
+        Messages.send(source, "d CannonTool ", "g 珍珠轨迹过滤：", "w " + filter,
+                "g （每 2 tick 连线，最长 1000 tick）");
         return 1;
     }
 
