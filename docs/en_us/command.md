@@ -10,23 +10,23 @@ Commands have two roots: `/cannon` runs on the server and requires OP (`commands
 
 ### Configuration
 
-&emsp;&emsp;- `/cannon start <name> - Start configuring; only named ender pearls/snowballs whose name starts with "name:" are recorded`
+&emsp;&emsp;- `/cannon config start <name> - Start configuring; only named ender pearls/snowballs whose name starts with "name:" are recorded`
 
-&emsp;&emsp;- `/cannon stop - Stop the current configuration`
+&emsp;&emsp;- `/cannon config stop - Stop the current configuration`
 
-&emsp;&emsp;- `/cannon list - List all server configurations`
+&emsp;&emsp;- `/cannon config list - List all server configurations`
 
-&emsp;&emsp;- `/cannon info - Show the current configuration`
+&emsp;&emsp;- `/cannon config info - Show the current configuration`
 
-&emsp;&emsp;- `/cannon delete <name> - Delete a configuration`
+&emsp;&emsp;- `/cannon config delete <name> - Delete a configuration`
 
-&emsp;&emsp;- `/cannon maxTnt <count> - Set the maximum TNT per side (0 means unlimited)`
+&emsp;&emsp;- `/cannon config maxTnt <count> - Set the maximum TNT per side (0 means unlimited)`
 
-&emsp;&emsp;- `/cannon resetTick - Clear the reference tick and all samples`
+&emsp;&emsp;- `/cannon config resetTick - Clear the reference tick and all samples`
 
-&emsp;&emsp;- `/cannon selectTick <tick> - Pick the reference tick by clicking in chat`
+&emsp;&emsp;- `/cannon config selectTick <tick> - Pick the reference tick by clicking in chat`
 
-&emsp;&emsp;- `/cannon give [ender_pearl|snowball] - Give the 8 named calibration projectiles; ender pearl by default`
+&emsp;&emsp;- `/cannon config give [ender_pearl|snowball] - Give the 8 named calibration projectiles; ender pearl by default`
 
 ### Calibration
 
@@ -38,17 +38,17 @@ Commands have two roots: `/cannon` runs on the server and requires OP (`commands
 
 ### ROM
 
-&emsp;&emsp;- `/cannon rom order <order> - Set the section order: one of RBD/RDB/BRD/BDR/DRB/DBR`
+&emsp;&emsp;- `/cannon config rom order <order> - Set the section order: one of RBD/RDB/BRD/BDR/DRB/DBR`
 
-&emsp;&emsp;- `/cannon rom red <w1,w2,...> - Comma-separated red weights, left to right as on the signs`
+&emsp;&emsp;- `/cannon config rom red <w1,w2,...> - Comma-separated red weights, left to right as on the signs`
 
-&emsp;&emsp;- `/cannon rom red inverse <w1,w2,...> - Same, but the list is reversed before saving`
+&emsp;&emsp;- `/cannon config rom red inverse <w1,w2,...> - Same, but the list is reversed before saving`
 
-&emsp;&emsp;- `/cannon rom blue <w1,w2,...> - Comma-separated blue weights`
+&emsp;&emsp;- `/cannon config rom blue <w1,w2,...> - Comma-separated blue weights`
 
-&emsp;&emsp;- `/cannon rom blue inverse <w1,w2,...> - Same, but the list is reversed before saving`
+&emsp;&emsp;- `/cannon config rom blue inverse <w1,w2,...> - Same, but the list is reversed before saving`
 
-&emsp;&emsp;- `/cannon rom show - Show the ROM settings`
+&emsp;&emsp;- `/cannon config rom show - Show the ROM settings`
 
 &emsp;&emsp;- Server configurations are stored as `<world>/pearlcannon/<name>.json`
 
@@ -58,7 +58,7 @@ Commands have two roots: `/cannon` runs on the server and requires OP (`commands
 
 &emsp;&emsp;- `/cannon calc plane <name> <x> <z> <y> [maxTicks] - Plane mode using the server configuration directly`
 
-&emsp;&emsp;- `/cannon trail <name|off> - Draw matching ender pearl trails on the server; matches full name, config-name prefix, or sample-name suffix; off disables (26.1 only, requires Ryan's Server Rendering Kit)`
+&emsp;&emsp;- `/cannon trail <name|off> - Draw matching ender pearl trails on the server; one trail per player, kept after the pearl disappears, up to 1000 ticks; off disables (26.1 only, requires Ryan's Server Rendering Kit)`
 
 ## Calculator (cannonClient)
 

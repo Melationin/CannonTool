@@ -25,18 +25,18 @@
 服务端（需要 OP，在世界里标定）：
 
 ```
-/cannon start zzp1           # 开始配置
-/cannon give                 # 领取 8 颗已命名的末影珍珠（give snowball 换雪球）
+/cannon config start zzp1           # 开始配置
+/cannon config give                 # 领取 8 颗已命名的末影珍珠（give snowball 换雪球）
 # 投掷第一颗珍珠/雪球 → 在聊天栏点击选择一个基准 tick
 # 依次投掷其余 7 颗（以及可选的 zzp1:ZZ 空配置）
-/cannon maxTnt 3000          # 设置最大单侧药量
-/cannon rom order RBD        # 设置红/蓝/方向三段的排列
-/cannon rom red  8,4,2,1,4480,2240,1120,560,10,20,40,80,160,240
-/cannon rom blue 240,160,80,40,20,10,560,1120,2240,4480,1,2,4,8 inverse
+/cannon config maxTnt 3000          # 设置最大单侧药量
+/cannon config rom order RBD        # 设置红/蓝/方向三段的排列
+/cannon config rom red  8,4,2,1,4480,2240,1120,560,10,20,40,80,160,240
+/cannon config rom blue 240,160,80,40,20,10,560,1120,2240,4480,1,2,4,8 inverse
 
 /cannon calc normal zzp1 1635 -122 256   # 服务端直接读取服务端配置计算
 /cannon calc plane  zzp1 1635 -122 64 256
-/cannon trail zzp1                       # 服务端显示名称匹配 zzp1 的珍珠轨迹（26.1，需 Ryan's Server Rendering Kit）
+/cannon trail zzp1                       # 服务端显示轨迹：每个玩家一条，珍珠消失后保留，最长 1000 tick
 /cannon trail off                        # 关闭轨迹显示
 ```
 

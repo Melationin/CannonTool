@@ -14,7 +14,7 @@
 - 帮助只显示完整命令，说明放在命令的悬停提示里（`Messages` 的 `^` 段），不做单行表格对齐。
 - 服务端在玩家加入和配置增删时通过 `ConfigNamesPayload` 同步配置名，客户端缓存到 `ServerCannonNames`，供 `/cannonClient pull <名称>` 的补全使用。
 - `/cannonClient push <名称>` 读取客户端本地 json，经 `PushConfigPayload` 发到服务端；服务端校验 OP 后写入服务端配置，并通过 `PushResultPayload` 回执。
-- 轨迹显示：`trail/ServerPearlTrail` 在服务端按名称过滤 `ThrownEnderpearl`，用 Ryan's Server Rendering Kit 的 `StripLineShape` 和虚拟 display 画线；仅 26.1 编译，库 jar 在 `libs/`，其它版本是空实现。
+- 轨迹显示：`trail/ServerPearlTrail` 在服务端按名称过滤 `ThrownEnderpearl`，每个玩家最多一条；每 10 tick 采样，固定 100 个顶点（约 1000 tick），珍珠消失后冻结保留；用 Ryan's Server Rendering Kit 的 `StripLineShape` 和虚拟 display 画线；仅 26.1 编译，库 jar 在 `libs/`，其它版本是空实现。
 
 ## 编码风格
 

@@ -512,7 +512,7 @@ public final class PearlCalibration
                                 "  #%d  Δv=%s  |Δv_xz|=%.4f", sample.tick(), formatVec(sample.delta()), horizontalLength(sample.delta())))
                         .withStyle(style -> style
                                 .withColor(ChatFormatting.YELLOW)
-                                .withClickEvent(new ClickEvent.RunCommand("/cannon selectTick " + sample.tick()))
+                                .withClickEvent(new ClickEvent.RunCommand("/cannon config selectTick " + sample.tick()))
                                 .withHoverEvent(new HoverEvent.ShowText(Component.literal("点击设为基准 tick"))));
                 player.sendSystemMessage(line);
             }

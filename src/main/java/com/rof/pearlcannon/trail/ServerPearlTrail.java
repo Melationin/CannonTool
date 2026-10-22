@@ -11,15 +11,15 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.projectile.throwableitemprojectile.ThrownEnderpearl;
 import net.minecraft.world.phys.Vec3;
 
 import java.awt.Color;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -27,15 +27,16 @@ import java.util.UUID;
 //?}
 
 /**
- * 服务端珍珠轨迹：按名称过滤末影珍珠，用 Ryan's Server Rendering Kit 的虚拟 display 画线。
- * <p>固定顶点数，避免每 tick 增删 display；轨迹是最近一段飞行路径。</p>
+ * 服务端珍珠轨迹：每个玩家最多一条，珍珠消失后保留已画出的轨迹。
+ * <p>固定 100 个顶点、每 10 tick 采样一次，覆盖最近 1000 tick；顶点数固定，
+ * 避免服务端虚拟 display 每 tick 重建。</p>
  */
 public final class ServerPearlTrail
 {
     //? =26.1 {
-    private static final int MAX_POINTS = 48;
-    private static final int MAX_TRAILS = 8;
-    private static final Map<UUID, Trail> TRAILS = new LinkedHashMap<>();
+    private static final int SAMPLES = 100;
+    private static final int SAMPLE_INTERVAL = 10;
+    private static final Map<UUID, Trail> TRAILS = new HashMap<>();
 
     private static String filter;
     private static boolean initialized;
@@ -74,43 +75,48 @@ public final class ServerPearlTrail
         if (filter == null) return;
         tick++;
 
-        Set<UUID> live = new HashSet<>();
+        Map<UUID, ThrownEnderpearl> active = new HashMap<>();
         for (ServerLevel level : server.getAllLevels())
         {
             for (Entity entity : level.getAllEntities())
             {
                 if (!(entity instanceof ThrownEnderpearl pearl)) continue;
                 if (!matches(pearlName(pearl))) continue;
+                if (!(pearl.getOwner() instanceof ServerPlayer player)) continue;
 
-                live.add(pearl.getUUID());
-                Trail trail = TRAILS.get(pearl.getUUID());
-                if (trail == null)
-                {
-                    trail = new Trail(pearl);
-                    TRAILS.put(pearl.getUUID(), trail);
-                    trimTrails();
-                }
-                if (tick % 2 == 0) trail.add(pearl.position());
+                active.merge(player.getUUID(), pearl,
+                        (first, second) -> first.getId() >= second.getId() ? first : second);
             }
         }
 
-        for (UUID id : new ArrayList<>(TRAILS.keySet()))
+        Set<UUID> activePearls = new HashSet<>();
+        for (Map.Entry<UUID, ThrownEnderpearl> entry : active.entrySet())
         {
-            if (live.contains(id)) continue;
-            TRAILS.remove(id).remove();
-        }
-    }
+            UUID playerId = entry.getKey();
+            ThrownEnderpearl pearl = entry.getValue();
+            activePearls.add(pearl.getUUID());
 
-    private static void trimTrails()
-    {
-        while (TRAILS.size() > MAX_TRAILS)
+            Trail trail = TRAILS.get(playerId);
+            if (trail == null || !pearl.getUUID().equals(trail.pearlId))
+            {
+                if (trail != null) trail.remove();
+                trail = new Trail(playerId, pearl);
+                TRAILS.put(playerId, trail);
+            }
+
+            if (tick % SAMPLE_INTERVAL == 0)
+            {
+                trail.add(pearl.position());
+            }
+        }
+
+        // 珍珠实体消失后只冻结轨迹，不删除已经画出的路径。
+        for (Trail trail : TRAILS.values())
         {
-            Iterator<UUID> iterator = TRAILS.keySet().iterator();
-            if (!iterator.hasNext()) return;
-            UUID id = iterator.next();
-            Trail trail = TRAILS.get(id);
-            iterator.remove();
-            if (trail != null) trail.remove();
+            if (trail.pearlId != null && !activePearls.contains(trail.pearlId))
+            {
+                trail.freeze();
+            }
         }
     }
 
@@ -146,14 +152,16 @@ public final class ServerPearlTrail
     {
         private final Identifier id;
         private final StripLineShape shape;
-        private final List<Vec3> points = new ArrayList<>(MAX_POINTS);
+        private final List<Vec3> points = new ArrayList<>(SAMPLES);
+        private UUID pearlId;
         private int filled = 1;
 
-        private Trail(ThrownEnderpearl pearl)
+        private Trail(UUID playerId, ThrownEnderpearl pearl)
         {
-            id = Identifier.fromNamespaceAndPath(PearlCannon.MOD_ID, "trail/" + pearl.getUUID());
+            pearlId = pearl.getUUID();
+            id = Identifier.fromNamespaceAndPath(PearlCannon.MOD_ID, "trail/" + playerId);
             Vec3 start = pearl.position();
-            for (int i = 0; i < MAX_POINTS; i++)
+            for (int i = 0; i < SAMPLES; i++)
             {
                 points.add(start.add(0, i * 0.001, 0));
             }
@@ -170,24 +178,29 @@ public final class ServerPearlTrail
 
         private void add(Vec3 position)
         {
-            if (filled < MAX_POINTS)
+            if (filled < SAMPLES)
             {
                 points.set(filled, position);
                 filled++;
-                for (int i = filled; i < MAX_POINTS; i++)
+                for (int i = filled; i < SAMPLES; i++)
                 {
                     points.set(i, position.add(0, (i - filled + 1) * 0.001, 0));
                 }
             }
             else
             {
-                for (int i = 1; i < MAX_POINTS; i++)
+                for (int i = 1; i < SAMPLES; i++)
                 {
                     points.set(i - 1, points.get(i));
                 }
-                points.set(MAX_POINTS - 1, position);
+                points.set(SAMPLES - 1, position);
             }
             shape.setVertexes(points);
+        }
+
+        private void freeze()
+        {
+            pearlId = null;
         }
 
         private void remove()

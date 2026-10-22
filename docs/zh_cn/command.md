@@ -10,23 +10,23 @@
 
 ### 配置
 
-&emsp;&emsp;- `/cannon start <名称> - 开始配置；之后只记录以“名称:”开头的命名珍珠/雪球`
+&emsp;&emsp;- `/cannon config start <名称> - 开始配置；之后只记录以“名称:”开头的命名珍珠/雪球`
 
-&emsp;&emsp;- `/cannon stop - 结束当前配置`
+&emsp;&emsp;- `/cannon config stop - 结束当前配置`
 
-&emsp;&emsp;- `/cannon list - 列出服务端所有配置`
+&emsp;&emsp;- `/cannon config list - 列出服务端所有配置`
 
-&emsp;&emsp;- `/cannon info - 查看当前配置`
+&emsp;&emsp;- `/cannon config info - 查看当前配置`
 
-&emsp;&emsp;- `/cannon delete <名称> - 删除配置`
+&emsp;&emsp;- `/cannon config delete <名称> - 删除配置`
 
-&emsp;&emsp;- `/cannon maxTnt <数量> - 设置最大单侧药量（0 表示不限）`
+&emsp;&emsp;- `/cannon config maxTnt <数量> - 设置最大单侧药量（0 表示不限）`
 
-&emsp;&emsp;- `/cannon resetTick - 清空基准 tick 与全部样本`
+&emsp;&emsp;- `/cannon config resetTick - 清空基准 tick 与全部样本`
 
-&emsp;&emsp;- `/cannon selectTick <tick> - 在聊天栏点击选择基准 tick`
+&emsp;&emsp;- `/cannon config selectTick <tick> - 在聊天栏点击选择基准 tick`
 
-&emsp;&emsp;- `/cannon give [ender_pearl|snowball] - 为当前配置发放 8 颗命名投掷物，默认末影珍珠`
+&emsp;&emsp;- `/cannon config give [ender_pearl|snowball] - 为当前配置发放 8 颗命名投掷物，默认末影珍珠`
 
 ### 标定
 
@@ -38,17 +38,17 @@
 
 ### ROM
 
-&emsp;&emsp;- `/cannon rom order <顺序> - 设置红/蓝/方向三段的排列，顺序为 RBD/RDB/BRD/BDR/DRB/DBR 之一`
+&emsp;&emsp;- `/cannon config rom order <顺序> - 设置红/蓝/方向三段的排列，顺序为 RBD/RDB/BRD/BDR/DRB/DBR 之一`
 
-&emsp;&emsp;- `/cannon rom red <w1,w2,...> - 逗号分隔的红权重，按牌子从左到右`
+&emsp;&emsp;- `/cannon config rom red <w1,w2,...> - 逗号分隔的红权重，按牌子从左到右`
 
-&emsp;&emsp;- `/cannon rom red inverse <w1,w2,...> - 同上，但保存前逆序（镜像）`
+&emsp;&emsp;- `/cannon config rom red inverse <w1,w2,...> - 同上，但保存前逆序（镜像）`
 
-&emsp;&emsp;- `/cannon rom blue <w1,w2,...> - 逗号分隔的蓝权重`
+&emsp;&emsp;- `/cannon config rom blue <w1,w2,...> - 逗号分隔的蓝权重`
 
-&emsp;&emsp;- `/cannon rom blue inverse <w1,w2,...> - 同上，但保存前逆序（镜像）`
+&emsp;&emsp;- `/cannon config rom blue inverse <w1,w2,...> - 同上，但保存前逆序（镜像）`
 
-&emsp;&emsp;- `/cannon rom show - 查看 ROM 配置`
+&emsp;&emsp;- `/cannon config rom show - 查看 ROM 配置`
 
 &emsp;&emsp;- 服务端配置保存在存档目录的 `pearlcannon/<名称>.json`
 
@@ -58,7 +58,7 @@
 
 &emsp;&emsp;- `/cannon calc plane <名称> <x> <z> <y> [最大tick] - 直接读取服务端配置做平面模式计算`
 
-&emsp;&emsp;- `/cannon trail <名称|off> - 在服务端显示名称匹配的末影珍珠轨迹；支持完整名称、配置名前缀、样本名后缀，off 关闭（仅 26.1，需 Ryan's Server Rendering Kit）`
+&emsp;&emsp;- `/cannon trail <名称|off> - 在服务端显示名称匹配的末影珍珠轨迹；每个玩家最多一条，珍珠消失后保留已画轨迹，最长 1000 tick；off 关闭（仅 26.1，需 Ryan's Server Rendering Kit）`
 
 ## 计算器 (cannonClient)
 

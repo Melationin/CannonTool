@@ -85,7 +85,14 @@ public final class PearlCannonConfigCommands
         }
         //?}
 
-        root.then(Commands.literal("start")
+        LiteralArgumentBuilder<CommandSourceStack> config = Commands.literal("config")
+                .executes(context ->
+                {
+                    sendHelp(context.getSource());
+                    return 1;
+                });
+
+        config.then(Commands.literal("start")
                 .then(Commands.argument("name", StringArgumentType.word())
                         .suggests(CONFIG_SUGGESTIONS)
                         .executes(context ->
@@ -102,21 +109,21 @@ public final class PearlCannonConfigCommands
                             return 1;
                         })));
 
-        root.then(Commands.literal("stop")
+        config.then(Commands.literal("stop")
                 .executes(context ->
                 {
                     PearlCalibration.stopSession(context.getSource().getPlayerOrException());
                     return 1;
                 }));
 
-        root.then(Commands.literal("list")
+        config.then(Commands.literal("list")
                 .executes(context ->
                 {
                     listConfigs(context.getSource());
                     return 1;
                 }));
 
-        root.then(Commands.literal("delete")
+        config.then(Commands.literal("delete")
                 .then(Commands.argument("name", StringArgumentType.word())
                         .suggests(CONFIG_SUGGESTIONS)
                         .executes(context ->
@@ -134,28 +141,28 @@ public final class PearlCannonConfigCommands
                             return 1;
                         })));
 
-        root.then(Commands.literal("info")
+        config.then(Commands.literal("info")
                 .executes(PearlCannonConfigCommands::info));
 
-        root.then(Commands.literal("maxTnt")
+        config.then(Commands.literal("maxTnt")
                 .then(Commands.argument("n", IntegerArgumentType.integer(0))
                         .executes(PearlCannonConfigCommands::setMaxTnt)));
 
-        root.then(Commands.literal("resetTick")
+        config.then(Commands.literal("resetTick")
                 .executes(context ->
                 {
                     ServerPlayer player = context.getSource().getPlayerOrException();
                     String name = PearlCalibration.sessionName(player.getUUID());
                     if (name == null)
                     {
-                        Messages.fail(context.getSource(), "r 请先执行 ", "g /cannon start ", "g <名称>");
+                        Messages.fail(context.getSource(), "r 请先执行 ", "g /cannon config start ", "g <名称>");
                         return 0;
                     }
                     PearlCalibration.resetTick(player, name);
                     return 1;
                 }));
 
-        root.then(Commands.literal("selectTick")
+        config.then(Commands.literal("selectTick")
                 .then(Commands.argument("tick", IntegerArgumentType.integer(1))
                         .executes(context ->
                         {
@@ -164,13 +171,14 @@ public final class PearlCannonConfigCommands
                             return 1;
                         })));
 
-        root.then(Commands.literal("give")
+        config.then(Commands.literal("give")
                 .executes(context -> giveProjectiles(context, "ender_pearl"))
                 .then(Commands.argument("type", StringArgumentType.word())
                         .suggests(GIVE_SUGGESTIONS)
                         .executes(context -> giveProjectiles(context, StringArgumentType.getString(context, "type")))));
 
-        root.then(romCommand());
+        config.then(romCommand());
+        root.then(config);
 
         return root;
     }
@@ -216,7 +224,7 @@ public final class PearlCannonConfigCommands
         String name = PearlCalibration.sessionName(player.getUUID());
         if (name == null)
         {
-            Messages.fail(source, "r 请先执行 ", "g /cannon start ", "g <名称>");
+            Messages.fail(source, "r 请先执行 ", "g /cannon config start ", "g <名称>");
             return null;
         }
         PearlCannonConfig config = PearlCannonConfigs.get(name);
@@ -360,9 +368,9 @@ public final class PearlCannonConfigCommands
         if (!PearlCannonRom.configured(config.rom))
         {
             Messages.send(source, "r 未配置完整：需要顺序 + 红权重 + 蓝权重");
-            Messages.send(source, "g  /cannon rom order <" + String.join("|", PearlCannonRom.ORDERS) + ">");
-            Messages.send(source, "g  /cannon rom red <w1,w2,...>");
-            Messages.send(source, "g  /cannon rom blue <w1,w2,...>");
+            Messages.send(source, "g  /cannon config rom order <" + String.join("|", PearlCannonRom.ORDERS) + ">");
+            Messages.send(source, "g  /cannon config rom red <w1,w2,...>");
+            Messages.send(source, "g  /cannon config rom blue <w1,w2,...>");
             return;
         }
 
@@ -563,19 +571,19 @@ public final class PearlCannonConfigCommands
             help(source, "/cannon trail <名称|off>", "服务端显示珍珠轨迹");
         }
         //?}
-        help(source, "/cannon start <名称>", "开始配置");
-        help(source, "/cannon stop", "结束配置");
-        help(source, "/cannon list", "列出配置");
-        help(source, "/cannon info", "查看当前配置");
-        help(source, "/cannon delete <名称>", "删除配置");
-        help(source, "/cannon maxTnt <数量>", "最大单侧药量");
-        help(source, "/cannon resetTick", "清空基准与样本");
-        help(source, "/cannon selectTick <tick>", "选择基准 tick");
-        help(source, "/cannon give [ender_pearl|snowball]", "发放标定投掷物");
-        help(source, "/cannon rom order <顺序>", "ROM 三段顺序");
-        help(source, "/cannon rom red|blue <w1,w2,...>", "红/蓝权重");
-        help(source, "/cannon rom red|blue inverse <w1,w2,...>", "红/蓝权重（镜像）");
-        help(source, "/cannon rom show", "查看 ROM");
+        help(source, "/cannon config start <名称>", "开始配置");
+        help(source, "/cannon config stop", "结束配置");
+        help(source, "/cannon config list", "列出配置");
+        help(source, "/cannon config info", "查看当前配置");
+        help(source, "/cannon config delete <名称>", "删除配置");
+        help(source, "/cannon config maxTnt <数量>", "最大单侧药量");
+        help(source, "/cannon config resetTick", "清空基准与样本");
+        help(source, "/cannon config selectTick <tick>", "选择基准 tick");
+        help(source, "/cannon config give [ender_pearl|snowball]", "发放标定投掷物");
+        help(source, "/cannon config rom order <顺序>", "ROM 三段顺序");
+        help(source, "/cannon config rom red|blue <w1,w2,...>", "红/蓝权重");
+        help(source, "/cannon config rom red|blue inverse <w1,w2,...>", "红/蓝权重（镜像）");
+        help(source, "/cannon config rom show", "查看 ROM");
     }
 
     private static void help(CommandSourceStack source, String command, String description)
