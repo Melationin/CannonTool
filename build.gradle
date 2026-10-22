@@ -79,6 +79,9 @@ dependencies {
 	if (stonecutter.eval(minecraftVer, ">=26.1")) {
 		implementation "net.fabricmc:fabric-loader:${property("loader_version")}"
 		implementation "net.fabricmc.fabric-api:fabric-api:${property("fabric_api_version")}"
+		if (minecraftVer == "26.1") {
+			compileOnly rootProject.files("libs/ryansrenderingkit-1.3.0+26.1.jar")
+		}
 	} else {
 		mappings loom.officialMojangMappings()
 		modImplementation "net.fabricmc:fabric-loader:${property("loader_version")}"

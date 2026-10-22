@@ -9,6 +9,7 @@
 | 名称 | 类型 | 链接 | 备注 |
 |------|------|------|------|
 | Fabric API | 必须 | [Modrinth](https://modrinth.com/mod/fabric-api) | - |
+| [Ryan's Rendering Kit](https://github.com/hotpad100c/ryansrenderingkit) | 可选 | [Modrinth](https://modrinth.com/mod/ryansrenderingkit) | 仅 26.1 轨迹显示需要；版本 1.3.0+26.1 |
 
 ## 版本支持
 
@@ -16,6 +17,8 @@
 |---------|------|
 | 1.21.5 / 1.21.6 / 1.21.8 / 1.21.9 / 1.21.11 | 支持 |
 | 26.1 / 26.2 / 26.3 | 支持 |
+
+轨迹显示仅支持 **26.1**，且需要安装 Ryan's Rendering Kit；其它版本没有 `trail` 命令。
 
 ## 快速开始
 
@@ -41,6 +44,8 @@
 /pearlCannonCalc normal zzp1 1635 -122 256
 /pearlCannonCalc plane  zzp1 1635 -122 64 256
 /pearlCannonCalc hud 1                  # 把第 1 条结果的配置编码持续显示在动作栏
+/pearlCannonCalc trail zzp1             # 显示名称匹配 zzp1 的珍珠轨迹（26.1，需 Ryan's Rendering Kit）
+/pearlCannonCalc trail off              # 关闭轨迹显示
 ```
 
 也可以不走拉取：把服务端的 `<world>/pearlcannon/zzp1.json` 手动复制到 `.minecraft/config/pearlcannon/zzp1.json`，下次计算会自动读取。
@@ -67,5 +72,7 @@ English:
 .\gradlew.bat :26.1:build -x test
 .\gradlew.bat :1.21.5:build -x test
 ```
+
+26.1 调试轨迹时，把 `libs/ryansrenderingkit-1.3.0+26.1.jar` 复制到 `run/mods/`；发布使用时放进 `mods/`。
 
 产物在 `versions/<版本>/build/libs/`。

@@ -9,8 +9,9 @@ com/rof/pearlcannon/
 │   └── PearlCalibration.java           # 珍珠/雪球标定（服务端）：命名解析、Δv 采样、基准 tick、清理
 ├── client/
 │   ├── PearlCannonClient.java          # 客户端入口：本地命令、配置编码 HUD、接收服务端配置
-│   ├── PearlCannonClientCommands.java  # /pearlCannonCalc normal|plane|expand|hud|pull|list
+│   ├── PearlCannonClientCommands.java  # /pearlCannonCalc normal|plane|expand|hud|trail|push|pull|list
 │   ├── PearlCannonCalc.java            # 客户端求解、结果展示与配置编码 HUD
+│   ├── PearlTrailRenderer.java         # 名称过滤与珍珠轨迹渲染（仅 26.1，Ryan's Rendering Kit）
 │   ├── ClientCannonConfigs.java        # 客户端配置：config/pearlcannon/<名称>.json
 │   ├── ServerCannonNames.java          # 服务端配置名缓存（pull 补全）
 │   └── ClientMessages.java             # 客户端聊天输出

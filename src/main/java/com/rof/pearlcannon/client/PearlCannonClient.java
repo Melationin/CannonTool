@@ -6,6 +6,7 @@ import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallba
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.network.chat.Component;
 
 /** 客户端入口：注册本地命令、接收服务端下发的配置并写入本地文件夹。 */
@@ -18,6 +19,13 @@ public class PearlCannonClient implements ClientModInitializer
 
         ClientCommandRegistrationCallback.EVENT.register((dispatcher, buildContext) ->
                 PearlCannonClientCommands.register(dispatcher));
+
+        //? =26.1 {
+        if (FabricLoader.getInstance().isModLoaded("ryansrenderingkit"))
+        {
+            PearlTrailRenderer.init();
+        }
+        //?}
 
         ClientPlayNetworking.registerGlobalReceiver(PearlCannonPayloads.ConfigPayload.TYPE, (payload, context) ->
         {

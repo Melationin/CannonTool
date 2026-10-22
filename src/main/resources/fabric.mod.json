@@ -27,5 +27,8 @@
     "minecraft": "${minecraftVer}",
     "fabricloader": ">=0.18.0",
     "fabric-api": "*"
+  },
+  "suggests": {
+    "ryansrenderingkit": "*"
   }
 }

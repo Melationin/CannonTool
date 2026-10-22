@@ -76,6 +76,8 @@
 
 &emsp;&emsp;- `/pearlCannonCalc hud <序号|off> - 把某条结果的配置编码持续显示在动作栏，off 关闭`
 
+&emsp;&emsp;- `/pearlCannonCalc trail <名称|off> - 显示名称匹配的末影珍珠轨迹；支持完整名称、配置名前缀、样本名后缀，off 关闭（仅 26.1，需 Ryan's Rendering Kit）`
+
 &emsp;&emsp;- 结果按误差排序，短行包含：序号、tick、落点、误差、总数；`[展开]` 可看方向、蓝/红药量、初速度与配置编码
 
 &emsp;&emsp;- 配置了 ROM 时，`[展开]` 里的配置编码可直接点击复制

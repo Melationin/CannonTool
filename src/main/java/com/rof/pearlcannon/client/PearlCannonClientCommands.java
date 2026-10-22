@@ -13,8 +13,10 @@ import com.rof.pearlcannon.config.PearlCannonConfig;
 import com.rof.pearlcannon.net.PearlCannonPayloads;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.commands.SharedSuggestionProvider;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -28,6 +30,18 @@ public final class PearlCannonClientCommands
 
     private static final SuggestionProvider<FabricClientCommandSource> SERVER_CONFIG_SUGGESTIONS =
             (context, builder) -> SharedSuggestionProvider.suggest(ServerCannonNames.names(), builder);
+
+    private static final SuggestionProvider<FabricClientCommandSource> TRAIL_SUGGESTIONS =
+            (context, builder) ->
+            {
+                List<String> names = new ArrayList<>(ServerCannonNames.names());
+                for (String name : ClientCannonConfigs.names())
+                {
+                    if (!names.contains(name)) names.add(name);
+                }
+                names.add("off");
+                return SharedSuggestionProvider.suggest(names, builder);
+            };
 
     private PearlCannonClientCommands() {}
 
@@ -46,6 +60,12 @@ public final class PearlCannonClientCommands
         root.then(hudCommand());
         root.then(pushCommand());
         root.then(pullCommand());
+        //? =26.1 {
+        if (FabricLoader.getInstance().isModLoaded("ryansrenderingkit"))
+        {
+            root.then(trailCommand());
+        }
+        //?}
         root.then(literal("list").executes(context ->
         {
             listConfigs(context.getSource());
@@ -128,6 +148,37 @@ public final class PearlCannonClientCommands
         return 1;
     }
 
+    private static LiteralArgumentBuilder<FabricClientCommandSource> trailCommand()
+    {
+        return literal("trail")
+                .executes(context -> trail(context, "off"))
+                .then(argument("name", StringArgumentType.greedyString())
+                        .suggests(TRAIL_SUGGESTIONS)
+                        .executes(context -> trail(context, StringArgumentType.getString(context, "name"))));
+    }
+
+    private static int trail(CommandContext<FabricClientCommandSource> context, String value)
+    {
+        FabricClientCommandSource source = context.getSource();
+        if (value.equalsIgnoreCase("off"))
+        {
+            PearlTrailRenderer.clear();
+            ClientMessages.send(source, "d 珍珠炮 ", "g 已关闭珍珠轨迹");
+            return 1;
+        }
+
+        String filter = value.strip();
+        if (filter.isEmpty())
+        {
+            ClientMessages.fail(source, "r 名称不能为空");
+            return 0;
+        }
+
+        PearlTrailRenderer.setFilter(filter);
+        ClientMessages.send(source, "d 珍珠炮 ", "g 珍珠轨迹过滤：", "w " + filter);
+        return 1;
+    }
+
     private static LiteralArgumentBuilder<FabricClientCommandSource> pullCommand()
     {
         return literal("pull")
@@ -184,6 +235,12 @@ public final class PearlCannonClientCommands
         help(source, "/pearlCannonCalc plane <名称> <x> <z> <y> [最大tick]", "平面模式");
         help(source, "/pearlCannonCalc expand <序号>", "展开结果");
         help(source, "/pearlCannonCalc hud <序号|off>", "持续显示配置编码");
+        //? =26.1 {
+        if (FabricLoader.getInstance().isModLoaded("ryansrenderingkit"))
+        {
+            help(source, "/pearlCannonCalc trail <名称|off>", "显示指定名称的珍珠轨迹");
+        }
+        //?}
         help(source, "/pearlCannonCalc push <名称>", "把本地配置发送到服务端");
         help(source, "/pearlCannonCalc pull [名称]", "拉取配置");
         help(source, "/pearlCannonCalc list", "查看本地配置");

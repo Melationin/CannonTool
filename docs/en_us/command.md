@@ -76,6 +76,8 @@ Commands have two roots: `/pearlCannonConfig` runs on the server and requires OP
 
 &emsp;&emsp;- `/pearlCannonCalc hud <index|off> - Keep a result's configuration code on the action bar; use off to hide it`
 
+&emsp;&emsp;- `/pearlCannonCalc trail <name|off> - Draw the flight path of ender pearls whose name matches; matches full name, config-name prefix, or sample-name suffix; off disables (26.1 only, requires Ryan's Rendering Kit)`
+
 &emsp;&emsp;- Results are sorted by error; each row shows index, tick, landing point, error and total TNT count
 
 &emsp;&emsp;- When a ROM is configured, the configuration code in the expanded view can be clicked to copy

@@ -13,6 +13,7 @@
 - 帮助只显示完整命令，说明放在命令的悬停提示里（`Messages` 的 `^` 段），不做单行表格对齐。
 - 服务端在玩家加入和配置增删时通过 `ConfigNamesPayload` 同步配置名，客户端缓存到 `ServerCannonNames`，供 `/pearlCannonCalc pull <名称>` 的补全使用。
 - `/pearlCannonCalc push <名称>` 读取客户端本地 json，经 `PushConfigPayload` 发到服务端；服务端校验 OP 后写入服务端配置，并通过 `PushResultPayload` 回执。
+- 轨迹显示：`PearlTrailRenderer` 按名称过滤 `ThrownEnderpearl`，用 Ryan's Rendering Kit 的 `StripLineShape` 逐 tick 追加点；仅 26.1 编译，库 jar 在 `libs/`，运行时需要安装该模组，其它版本是空实现。
 
 ## 编码风格
 
