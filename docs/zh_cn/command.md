@@ -16,7 +16,7 @@
 
 &emsp;&emsp;- `/cannon config list - 列出服务端所有配置`
 
-&emsp;&emsp;- `/cannon config info - 查看当前配置`
+&emsp;&emsp;- `/cannon config info - 查看当前配置；没有 start 时显示简单教程（`/cannon config` 同义）`
 
 &emsp;&emsp;- `/cannon config delete <名称> - 删除配置`
 
@@ -31,6 +31,8 @@
 ### 标定
 
 &emsp;&emsp;- 第一颗投掷物结束后，聊天栏会列出所有水平动量变化非零的 tick，点击其中一个作为基准 tick
+
+&emsp;&emsp;- 基准 tick 只按第一颗投掷物结束后点击选中的 tick；之后每颗投掷物都在该 tick 记录
 
 &emsp;&emsp;- 之后每颗投掷物都在基准 tick 末记录并清理；该 tick 没有动量变化时会提示异常
 
@@ -52,13 +54,33 @@
 
 &emsp;&emsp;- 服务端配置保存在存档目录的 `pearlcannon/<名称>.json`
 
-### 服务端计算与轨迹
+### 服务端计算与追踪
 
 &emsp;&emsp;- `/cannon calc normal <名称> <x> <z> [最大tick] - 直接读取服务端配置做 tick 模式计算`
 
 &emsp;&emsp;- `/cannon calc plane <名称> <x> <z> <y> [最大tick] - 直接读取服务端配置做平面模式计算`
 
-&emsp;&emsp;- `/cannon trail <名称|off> - 在服务端显示名称匹配的末影珍珠轨迹；每个玩家最多一条，逐 tick 画线段，珍珠消失后保留已画轨迹，最长 1000 tick；off 关闭（仅 26.1，需 Ryan's Server Rendering Kit）`
+&emsp;&emsp;- 计算源点始终是执行命令时玩家所在坐标，不写入配置；走到别处计算会按新位置算。控制台没有玩家坐标，不能执行计算`
+
+&emsp;&emsp;- `/cannon calc expand <序号> - 展开最近一次计算的结果详情（配置编码、红/蓝阵列、初速度等）`
+
+&emsp;&emsp;- `/cannon calc hud <序号|off> - 在动作栏持续显示某条结果的配置编码；off 关闭`
+
+&emsp;&emsp;- 服务端计算结果与客户端一致：每 tick 一个带 `[展开]` 的结果行，`expand` 详情里的 `[复制]`/`[HUD]` 也可直接点击`
+
+&emsp;&emsp;- `/cannon tracker - 只追踪当前最后一颗珍珠/雪球，再投出一颗后自动关闭`
+
+&emsp;&emsp;- `/cannon tracker on|off|once - 持续开启 / 关闭 / 只追踪当前`
+
+&emsp;&emsp;- `/cannon tracker hud [on|off] - 切换 HUD；开启时动作栏显示 Pos:[x,y,z]，保留 4 位小数`
+
+&emsp;&emsp;- `/cannon tracker trail [on|off] - 切换连线；连线只有主人可见，原始路径不预拆，只渲染主人 256 格内可见部分并复用 display 池；线段沿线方向（display 实体 yaw/pitch 指向线段方向），颜色取投掷物 UUID 的 hash 色相；珍珠消失后轨迹冻结，但显示仍会随主人移动更新；tick freeze 时也会继续刷新`
+
+&emsp;&emsp;- `/cannon tracker box [on|off] - 切换每 tick 的白色混凝土方块标记；方块大小等于投掷物碰撞箱，只有主人可见、不描边，display 实体 yaw/pitch 沿前进方向，256 格内复用 display 池`
+
+&emsp;&emsp;- 追踪使用玩家最后投出的珍珠/雪球 UUID；未加载区块中会持续重试，不中断追踪（server-side kit 已通过 JiJ 内嵌，无需单独安装）`
+
+&emsp;&emsp;- 每个玩家的 tracker 设置（HUD/连线/方块/模式）保存在 `<world>/pearlcannon/trackers/<uuid>.json`，默认连线开、方块关、HUD 开、模式 off；`on` 持久化为 always，`once` 是一次性动作、存盘为 off`
 
 ## 计算器 (cannonClient)
 
@@ -83,6 +105,8 @@
 &emsp;&emsp;- `/cannonClient expand <序号> - 展开某条结果的详细信息（含配置编码、红阵列、蓝阵列）；配置编码按红/蓝/方向着色，可点 [复制] 或 [HUD]`
 
 &emsp;&emsp;- `/cannonClient hud <序号|off> - 把某条结果的配置编码持续显示在动作栏，off 关闭`
+
+&emsp;&emsp;- 客户端计算源点 = 本地玩家当前坐标（同样不写入配置）`
 
 &emsp;&emsp;- 结果按误差排序，短行包含：序号、tick、落点、误差、总数；`[展开]` 可看方向、蓝/红药量、初速度与配置编码
 

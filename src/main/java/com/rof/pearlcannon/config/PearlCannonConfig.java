@@ -10,7 +10,8 @@ import java.util.Map;
 
 /**
  * 珍珠炮配置。
- * <p>原点为投掷者位置；不保存 TNT 坐标，只保存“1 颗推进 TNT”在基准 tick 给珍珠带来的动量变化 Δv。
+ * <p>源点不写入配置：计算时始终使用执行命令的玩家坐标。配置只保存“1 颗推进 TNT”在基准 tick
+ * 给珍珠带来的动量变化 Δv，以及相对投掷者的参考位置。
  * 空配置（ZZ）可选：命中时用它的基准 tick 动量作为基础动量，并把它的 Δv 从各样本的 Δv 中扣除。</p>
  */
 public class PearlCannonConfig
@@ -22,7 +23,6 @@ public class PearlCannonConfig
     public String dimension = "";
     /** 最大单侧药量，0 表示不限。 */
     public int maxTnt = 0;
-    public Vec origin = new Vec();
     public Reference reference = new Reference();
     public Map<String, Sample> samples = new LinkedHashMap<>();
     public Rom rom = new Rom();
@@ -78,7 +78,7 @@ public class PearlCannonConfig
         }
     }
 
-    /** 基准 tick 的珍珠状态：pos 相对原点，motionBefore 为冲量施加前。 */
+    /** 基准 tick 的珍珠状态：pos 相对投掷者（玩家坐标），motionBefore 为冲量施加前。 */
     public static class Reference
     {
         public int tick = 0;
@@ -126,7 +126,6 @@ public class PearlCannonConfig
     public void normalize()
     {
         if (dimension == null) dimension = "";
-        if (origin == null) origin = new Vec();
         if (reference == null) reference = new Reference();
         reference.normalize();
         if (samples == null) samples = new LinkedHashMap<>();

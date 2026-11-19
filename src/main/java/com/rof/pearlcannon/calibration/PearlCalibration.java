@@ -48,7 +48,7 @@ public final class PearlCalibration
 
     public record TickSample(int tick, Vec3 pos, Vec3 motionBefore, Vec3 motionAfter, Vec3 delta) {}
 
-    private record Pending(String configName, String key, String dimension, Vec3 origin, List<TickSample> samples) {}
+    private record Pending(String configName, String key, String dimension, List<TickSample> samples) {}
 
     public static void startSession(ServerPlayer player, String configName)
     {
@@ -209,7 +209,6 @@ public final class PearlCalibration
         }
 
         config.dimension = pending.dimension();
-        config.origin = PearlCannonConfig.Vec.of(pending.origin());
         config.reference.tick = tick;
         config.reference.pos = PearlCannonConfig.Vec.of(sample.pos());
         config.reference.motionBefore = PearlCannonConfig.Vec.of(sample.motionBefore());
@@ -432,7 +431,7 @@ public final class PearlCalibration
                     return;
                 }
                 boolean replaced = PENDING.put(ownerId,
-                        new Pending(configName, key, dimension, origin, new ArrayList<>(samples))) != null;
+                        new Pending(configName, key, dimension, new ArrayList<>(samples))) != null;
                 if (replaced)
                 {
                     send(server, ownerId, Component.literal("[CannonTool] ").withStyle(ChatFormatting.GOLD)

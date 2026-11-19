@@ -7,6 +7,9 @@ com/rof/pearlcannon/
 ├── PearlCannon.java                    # 通用入口：payload 注册、服务端命令、服务器生命周期
 ├── calibration/
 │   └── PearlCalibration.java           # 珍珠/雪球标定（服务端）：命名解析、Δv 采样、基准 tick、清理
+├── calc/
+│   ├── CalcOutput.java                 # 客户端/服务端共用结果展示：表头/结果行/expand/HUD/诊断
+│   └── ServerPearlCalc.java            # 服务端计算器：按玩家保存结果、expand/hud
 ├── client/
 │   ├── PearlCannonClient.java          # 客户端入口：本地命令、配置编码 HUD、接收服务端配置
 │   ├── PearlCannonClientCommands.java  # /cannonClient normal|plane|expand|hud|push|pull|list
@@ -15,18 +18,19 @@ com/rof/pearlcannon/
 │   ├── ServerCannonNames.java          # 服务端配置名缓存（pull 补全）
 │   └── ClientMessages.java             # 客户端聊天输出
 ├── trail/
-│   └── ServerPearlTrail.java           # 服务端名称过滤与珍珠轨迹（仅 26.1，Ryan's Server Rendering Kit）
+│   ├── ServerProjectileTracker.java    # 玩家投掷物追踪、HUD、线段轨迹与逐 tick 方块标记（全版本）
+│   └── TrackerSettings.java            # 每玩家 tracker 设置持久化：world/pearlcannon/trackers/<uuid>.json
 ├── command/
-│   └── PearlCannonConfigCommands.java  # 服务端命令树：/cannon ...
+│   └── PearlCannonConfigCommands.java  # 服务端命令树：/cannon calc|config|tracker
 ├── config/
-│   ├── PearlCannonConfig.java          # 单个炮台的配置数据（Gson POJO）
+│   ├── PearlCannonConfig.java          # 单个炮台的配置数据（Gson POJO，不含 origin）
 │   ├── PearlCannonConfigs.java         # 服务端配置注册表：world/pearlcannon/<名称>.json
 │   └── PearlCannonRom.java             # 二进制 ROM：三段顺序、权重表、子集和/编码
 ├── net/
 │   ├── PearlCannonPayloads.java        # pull/push 请求、配置下发、结束标记、配置名同步
 │   └── ServerConfigShare.java          # 服务端响应拉取请求
 ├── solver/
-│   └── PearlCannonSolver.java          # 求解器：tick 模式与平面模式（客户端与服务端共用）
+│   └── PearlCannonSolver.java          # 求解器：tick/平面模式，origin 由玩家坐标传入
 ├── util/
 │   ├── CommandAccess.java              # 版本相关的命令权限判断
 │   ├── ConfigNames.java                # 配置名/文件名校验
@@ -39,7 +43,7 @@ com/rof/pearlcannon/
 
 ## 客户端与服务端
 
-- 服务端：`PearlCannonConfigCommands` 注册 `/cannon ...`；配置写入 `<world>/pearlcannon/<名称>.json`；`/cannon calc` 直接读取服务端配置计算；`/cannon trail` 由 `trail/ServerPearlTrail` 渲染
+- 服务端：`PearlCannonConfigCommands` 注册 `/cannon ...`；配置写入 `<world>/pearlcannon/<名称>.json`；`/cannon calc` 直接读取服务端配置计算；`/cannon tracker` 由 `trail/ServerProjectileTracker` 提供 HUD/轨迹
 - 客户端：`PearlCannonClientCommands` 注册 `/cannonClient ...`（`normal`/`plane`/`expand`/`hud`/`push`/`pull`/`list`）；配置读取 `.minecraft/config/pearlcannon/<名称>.json`
 - 两个命令根互不重叠，客户端不需要转发服务端命令；`/cannon` 直接由服务端处理并校验 OP
 - 传输：客户端发 `pull_request`，服务端按需回 `config` 与 `pull_result`；不在同一台机器时也能同步
@@ -50,6 +54,8 @@ com/rof/pearlcannon/
 使用 Stonecutter 管理 `1.21.5`、`1.21.6`、`1.21.8`、`1.21.9`、`1.21.11`、`26.1`、`26.2`、`26.3`，活动版本为 `26.1`。
 
 - 各版本的 `loader_version`、`fabric_api_version`、`minecraft_ver` 放在 `versions/<版本>/gradle.properties`
+- 渲染 kit 依赖按版本从 `libs/` 选择：1.21.5/1.21.6/1.21.9/1.21.11/26.1/26.2 各一份；1.21.8 复用 1.21.6，26.3 复用 26.2；1.21.x 编译用 `-dev.jar`，26.x 用普通 jar
+- runtime kit jar 通过 Gradle `include`（JiJ）嵌入最终 CannonTool jar，服务器只需要安装 CannonTool，不需要单独安装 kit
 - 版本差异用 `//?` 条件注释处理，例如 `CommandAccess` 里的权限判断（`>=1.21.11` 使用 `PermissionSet`）
 - `ThrownEnderpearl` / `ThrowableItemProjectile` / `Snowball` 的包名在 `1.21.11` 前后不同，由 `build.gradle` 里的 Stonecutter 全局替换处理
 - 网络 API：`PayloadTypeRegistry.playC2S/playS2C`（1.21.x）与 `serverboundPlay/clientboundPlay`（26.1+）由 `PearlCannonPayloads` 的条件注释切换

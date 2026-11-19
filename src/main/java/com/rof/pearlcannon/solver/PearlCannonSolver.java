@@ -16,7 +16,8 @@ import java.util.Set;
 /**
  * 珍珠炮求解：对每个候选 tick 求闭式的蓝/红药量实数解，再取最近的整数组合模拟校验。
  * <p>速度模型：v = 基础动量 + 蓝数 × 蓝单位向量 + 红数 × 红单位向量，之后按珍珠自身 tick 的
- * {@code vy -= 0.03; v *= 0.99; pos += v} 推进。</p>
+ * {@code vy -= 0.03; v *= 0.99; pos += v} 推进。{@code origin} 是计算时执行命令的玩家坐标，
+ * 不存进配置。</p>
  */
 public final class PearlCannonSolver
 {
@@ -63,13 +64,13 @@ public final class PearlCannonSolver
         return infos;
     }
 
-    public static List<Solution> solve(PearlCannonConfig config, double targetX, double targetZ,
+    public static List<Solution> solve(PearlCannonConfig config, Vec3 origin, double targetX, double targetZ,
                                        int maxTnt, int maxTicks)
     {
         List<Solution> results = new ArrayList<>();
         if (config == null || !config.hasReference()) return results;
 
-        Vec3 start = config.origin.toVec3().add(config.reference.pos.toVec3());
+        Vec3 start = origin.add(config.reference.pos.toVec3());
         Vec3 base;
         Vec3 emptyDelta;
         if (config.hasEmpty())
@@ -174,13 +175,13 @@ public final class PearlCannonSolver
      * 平面模式：以“珍珠向下穿过指定高度平面”作为落点，落点取命中那一 tick 开始时的坐标
      * （原版传送使用的是 {@code oldPosition()}）。
      */
-    public static List<Solution> solvePlane(PearlCannonConfig config, double targetX, double targetZ,
+    public static List<Solution> solvePlane(PearlCannonConfig config, Vec3 origin, double targetX, double targetZ,
                                             double planeY, int maxTnt, int maxTicks)
     {
         List<Solution> results = new ArrayList<>();
         if (config == null || !config.hasReference()) return results;
 
-        Vec3 start = config.origin.toVec3().add(config.reference.pos.toVec3());
+        Vec3 start = origin.add(config.reference.pos.toVec3());
         Vec3 base;
         Vec3 emptyDelta;
         if (config.hasEmpty())

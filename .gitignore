@@ -27,3 +27,7 @@ remappedSrc/
 # local agent artifacts
 .dsh-acl-reports/
 .dsh-tmp*/
+
+# untracked work in progress
+/promo/
+/tools/

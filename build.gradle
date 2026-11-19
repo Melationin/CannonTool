@@ -17,6 +17,23 @@ plugins {
 def minecraftVer = stonecutter.current.version
 version = project.mod_version
 
+// The server-side rendering kit has one jar per Minecraft line; 1.21.8 reuses 1.21.6,
+// 26.3 reuses 26.2. The runtime jar is JiJ-included; 1.21.x compiles against the dev jar,
+// 26.x against the production jar.
+def kitVersions = [
+		"1.21.5" : "1.21.5",
+		"1.21.6" : "1.21.6",
+		"1.21.8" : "1.21.6",
+		"1.21.9" : "1.21.9",
+		"1.21.11": "1.21.11",
+		"26.1"   : "26.1",
+		"26.2"   : "26.2",
+		"26.3"   : "26.2",
+]
+def kitVersion = kitVersions[minecraftVer]
+def kitRuntimeJar = kitVersion == null ? null : rootProject.file("libs/ryansserverrenderingkit-1.2.0+${kitVersion}.jar")
+def kitCoordinate = kitVersion == null ? null : "local:ryansserverrenderingkit:1.2.0+${kitVersion}"
+
 if (stonecutter.eval(minecraftVer, ">=26.1")) {
 	apply plugin: 'net.fabricmc.fabric-loom'
 } else {
@@ -32,6 +49,7 @@ repositories {
 	maven { url = 'https://api.modrinth.com/maven' }
 	maven { url = 'https://repo1.maven.org/maven2' }
 	mavenCentral()
+	flatDir { dirs rootProject.file('libs') }
 }
 
 stonecutter {
@@ -79,13 +97,18 @@ dependencies {
 	if (stonecutter.eval(minecraftVer, ">=26.1")) {
 		implementation "net.fabricmc:fabric-loader:${property("loader_version")}"
 		implementation "net.fabricmc.fabric-api:fabric-api:${property("fabric_api_version")}"
-		if (minecraftVer == "26.1") {
-			compileOnly rootProject.files("libs/ryansserverrenderingkit-1.2.0+26.1.jar")
+		if (kitVersion != null) {
+			compileOnly files(kitRuntimeJar)
+			include kitCoordinate
 		}
 	} else {
 		mappings loom.officialMojangMappings()
 		modImplementation "net.fabricmc:fabric-loader:${property("loader_version")}"
 		modImplementation "net.fabricmc.fabric-api:fabric-api:${property("fabric_api_version")}"
+		if (kitVersion != null) {
+			compileOnly rootProject.files("libs/ryansserverrenderingkit-1.2.0+${kitVersion}-dev.jar")
+			include kitCoordinate
+		}
 	}
 }
 

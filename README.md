@@ -9,7 +9,7 @@
 | 名称 | 类型 | 链接 | 备注 |
 |------|------|------|------|
 | Fabric API | 必须 | [Modrinth](https://modrinth.com/mod/fabric-api) | - |
-| [Ryan's Server Rendering Kit](https://github.com/hotpad100c/ryansrenderingkit) | 可选 | GitHub | 仅 26.1 的 `/cannon trail` 需要；版本 1.2.0+26.1 |
+| [Ryan's Server Rendering Kit](https://github.com/hotpad100c/ryansrenderingkit) | 内嵌 | GitHub | `/cannon tracker` 的服务端 display 渲染；构建时通过 JiJ 嵌入 CannonTool，无需单独安装 |
 
 ## 版本支持
 
@@ -18,7 +18,7 @@
 | 1.21.5 / 1.21.6 / 1.21.8 / 1.21.9 / 1.21.11 | 支持 |
 | 26.1 / 26.2 / 26.3 | 支持 |
 
-服务端轨迹显示仅支持 **26.1**，且需要安装 Ryan's Server Rendering Kit；其它版本没有 `trail` 命令。
+服务端追踪使用构建时通过 JiJ 内嵌的 Ryan's Server Rendering Kit，只装 CannonTool 即可；1.21.8 用 1.21.6、26.3 用 26.2 的 kit 构建。不要额外把 kit jar 放进 `mods/`，避免重复 mod。
 
 ## 快速开始
 
@@ -36,9 +36,19 @@
 
 /cannon calc normal zzp1 1635 -122 256   # 服务端直接读取服务端配置计算
 /cannon calc plane  zzp1 1635 -122 64 256
-/cannon trail zzp1                       # 服务端显示轨迹：每玩家一条，逐 tick 连线，最长 1000 tick
-/cannon trail off                        # 关闭轨迹显示
+# 计算源点始终是执行命令时所在坐标；配置不保存 origin
+/cannon calc expand 1                    # 展开第 1 条结果
+/cannon calc hud 1                       # 动作栏持续显示配置编码；off 关闭
+/cannon config                           # 同 /cannon config info；没有 start 时显示教程
+/cannon tracker once                    # 只追踪当前最后一颗珍珠/雪球，再丢一颗自动关闭
+/cannon tracker on                      # 持续追踪之后每一颗珍珠/雪球
+/cannon tracker off                     # 关闭追踪
+/cannon tracker hud [on|off]            # HUD 开关（Pos:[x,y,z]，4 位小数）
+/cannon tracker trail [on|off]          # 连线开关（只有主人可见，UUID 着色，线段 yaw/pitch 沿线方向，256 格内复用 display 池；tick freeze 时仍刷新）
+/cannon tracker box [on|off]            # 白色混凝土方块标记开关（每 tick，碰撞箱大小，不描边，yaw/pitch 沿前进方向）
 ```
+
+每个玩家的 tracker 设置（HUD/连线/方块/模式）保存在 `<world>/pearlcannon/trackers/<uuid>.json`。默认：连线开、方块关、HUD 开、模式 off；`on` 会持久化为 always，`once` 是一次性动作、存盘为 off。
 
 客户端（不需要 OP，把配置拉到本地后计算）：
 
@@ -48,6 +58,7 @@
 /cannonClient list                   # 查看本地已有配置
 /cannonClient normal zzp1 1635 -122 256
 /cannonClient plane  zzp1 1635 -122 64 256
+# 客户端同样以本地玩家当前坐标为源点
 /cannonClient hud 1                  # 把第 1 条结果的配置编码持续显示在动作栏
 ```
 
@@ -76,8 +87,9 @@ English:
 # 26.x 需要 JDK 25，1.21.x 需要 JDK 21
 .\gradlew.bat :26.1:build -x test
 .\gradlew.bat :1.21.5:build -x test
+# 其它版本同理：:1.21.6 / :1.21.8 / :1.21.9 / :1.21.11 / :26.2 / :26.3
 ```
 
-26.1 调试轨迹时，把 `libs/ryansserverrenderingkit-1.2.0+26.1.jar` 复制到 `run/mods/`；发布使用时放进服务端的 `mods/`（单人游戏放客户端 `mods/`）。
+构建时 `build.gradle` 会从 `libs/` 选择对应版本的 runtime kit jar 并通过 JiJ 嵌入 CannonTool；开发时如果要在 `run/mods/` 单独放 kit，注意不要和 JiJ 版本重复。
 
 产物在 `versions/<版本>/build/libs/`。

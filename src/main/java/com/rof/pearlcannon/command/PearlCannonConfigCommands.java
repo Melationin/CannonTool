@@ -9,12 +9,12 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 import com.rof.pearlcannon.calibration.PearlCalibration;
+import com.rof.pearlcannon.calc.ServerPearlCalc;
 import com.rof.pearlcannon.config.PearlCannonConfig;
 import com.rof.pearlcannon.config.PearlCannonConfigs;
 import com.rof.pearlcannon.config.PearlCannonRom;
 import com.rof.pearlcannon.net.ServerConfigShare;
-import com.rof.pearlcannon.solver.PearlCannonSolver;
-import com.rof.pearlcannon.trail.ServerPearlTrail;
+import com.rof.pearlcannon.trail.ServerProjectileTracker;
 import com.rof.pearlcannon.util.CommandAccess;
 import com.rof.pearlcannon.util.ConfigNames;
 import com.rof.pearlcannon.util.Format;
@@ -32,7 +32,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.fabricmc.loader.api.FabricLoader;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
@@ -49,14 +48,6 @@ public final class PearlCannonConfigCommands
 
     private static final SuggestionProvider<CommandSourceStack> GIVE_SUGGESTIONS =
             (context, builder) -> SharedSuggestionProvider.suggest(GIVE_TYPES, builder);
-
-    private static final SuggestionProvider<CommandSourceStack> TRAIL_SUGGESTIONS =
-            (context, builder) ->
-            {
-                List<String> names = new ArrayList<>(PearlCannonConfigs.names());
-                names.add("off");
-                return SharedSuggestionProvider.suggest(names, builder);
-            };
 
     private record Active(String name, PearlCannonConfig config) {}
 
@@ -78,19 +69,13 @@ public final class PearlCannonConfigCommands
                 });
 
         root.then(calcCommand());
-        //? =26.1 {
         if (FabricLoader.getInstance().isModLoaded("ryansserverrenderingkit"))
         {
-            root.then(trailCommand());
+            root.then(trackerCommand());
         }
-        //?}
 
         LiteralArgumentBuilder<CommandSourceStack> config = Commands.literal("config")
-                .executes(context ->
-                {
-                    sendHelp(context.getSource());
-                    return 1;
-                });
+                .executes(PearlCannonConfigCommands::info);
 
         config.then(Commands.literal("start")
                 .then(Commands.argument("name", StringArgumentType.word())
@@ -241,13 +226,20 @@ public final class PearlCannonConfigCommands
     private static int info(CommandContext<CommandSourceStack> context) throws CommandSyntaxException
     {
         CommandSourceStack source = context.getSource();
+        ServerPlayer player = source.getPlayer();
+        if (player == null || PearlCalibration.sessionName(player.getUUID()) == null)
+        {
+            sendConfigTutorial(source);
+            return 1;
+        }
+
         Active active = active(source);
         if (active == null) return 0;
         PearlCannonConfig config = active.config();
 
         Messages.send(source, "d CannonTool ", "g 配置 ", "w " + active.name());
         Messages.send(source, "g 维度 ", "w " + (config.dimension.isEmpty() ? "未知" : config.dimension),
-                "g   原点 ", "w " + Format.vec(config.origin.toVec3()));
+                "g   计算源点 ", "w 玩家坐标");
         Messages.send(source, "g 最大单侧药量 ", "w " + (config.maxTnt <= 0 ? "不限" : String.valueOf(config.maxTnt)));
 
         if (config.hasReference())
@@ -295,6 +287,16 @@ public final class PearlCannonConfigCommands
             Messages.send(source, "g ROM ", "f 未配置");
         }
         return 1;
+    }
+
+    private static void sendConfigTutorial(CommandSourceStack source)
+    {
+        Messages.send(source, "d CannonTool ", "g 配置器");
+        Messages.send(source, "g 当前没有进行中的配置。");
+        Messages.send(source, "g 1. ", "w /cannon config start <名称>", "g  开始一个配置");
+        Messages.send(source, "g 2. ", "w /cannon config give", "g  领取命名珍珠/雪球");
+        Messages.send(source, "g 3. ", "g 依次投掷 00B~11R（可加 ZZ 空配置），第一颗后点击选择基准 tick");
+        Messages.send(source, "g 4. ", "w /cannon config info", "g  查看进度；", "w /cannon config stop", "g  结束");
     }
 
     private static int setMaxTnt(CommandContext<CommandSourceStack> context) throws CommandSyntaxException
@@ -455,127 +457,147 @@ public final class PearlCannonConfigCommands
         }
     }
 
-    private static LiteralArgumentBuilder<CommandSourceStack> trailCommand()
+    private static LiteralArgumentBuilder<CommandSourceStack> trackerCommand()
     {
-        return Commands.literal("trail")
-                .executes(context -> trail(context, "off"))
-                .then(Commands.argument("name", StringArgumentType.greedyString())
-                        .suggests(TRAIL_SUGGESTIONS)
-                        .executes(context -> trail(context, StringArgumentType.getString(context, "name"))));
+        return Commands.literal("tracker")
+                .executes(PearlCannonConfigCommands::trackerOnce)
+                .then(Commands.literal("on").executes(PearlCannonConfigCommands::trackerOn))
+                .then(Commands.literal("off").executes(PearlCannonConfigCommands::trackerOff))
+                .then(Commands.literal("once").executes(PearlCannonConfigCommands::trackerOnce))
+                .then(Commands.literal("hud")
+                        .executes(context -> trackerHud(context, null))
+                        .then(Commands.literal("on").executes(context -> trackerHud(context, true)))
+                        .then(Commands.literal("off").executes(context -> trackerHud(context, false))))
+                .then(Commands.literal("trail")
+                        .executes(context -> trackerTrail(context, null))
+                        .then(Commands.literal("on").executes(context -> trackerTrail(context, true)))
+                        .then(Commands.literal("off").executes(context -> trackerTrail(context, false))))
+                .then(Commands.literal("box")
+                        .executes(context -> trackerBox(context, null))
+                        .then(Commands.literal("on").executes(context -> trackerBox(context, true)))
+                        .then(Commands.literal("off").executes(context -> trackerBox(context, false))));
     }
 
-    private static int trail(CommandContext<CommandSourceStack> context, String value)
+    private static int trackerOnce(CommandContext<CommandSourceStack> context) throws CommandSyntaxException
     {
-        CommandSourceStack source = context.getSource();
-        if (value.equalsIgnoreCase("off"))
+        ServerPlayer player = context.getSource().getPlayerOrException();
+        if (!ServerProjectileTracker.trackOnce(player))
         {
-            ServerPearlTrail.clear();
-            Messages.send(source, "d CannonTool ", "g 已关闭珍珠轨迹");
-            return 1;
-        }
-
-        String filter = value.strip();
-        if (filter.isEmpty())
-        {
-            Messages.fail(source, "r 名称不能为空");
+            Messages.fail(context.getSource(), "r 当前没有可追踪的珍珠/雪球");
             return 0;
         }
 
-        ServerPearlTrail.setFilter(filter);
-        Messages.send(source, "d CannonTool ", "g 珍珠轨迹过滤：", "w " + filter,
-                "g （每 tick 连线，最长 1000 tick）");
+        Messages.send(context.getSource(), "d CannonTool ", "g 追踪：", "w 仅当前投掷物");
+        return 1;
+    }
+
+    private static int trackerOn(CommandContext<CommandSourceStack> context) throws CommandSyntaxException
+    {
+        ServerPlayer player = context.getSource().getPlayerOrException();
+        ServerProjectileTracker.trackAlways(player);
+        Messages.send(context.getSource(), "d CannonTool ", "g 追踪：", "w 持续开启");
+        return 1;
+    }
+
+    private static int trackerOff(CommandContext<CommandSourceStack> context) throws CommandSyntaxException
+    {
+        ServerPlayer player = context.getSource().getPlayerOrException();
+        ServerProjectileTracker.stop(player);
+        Messages.send(context.getSource(), "d CannonTool ", "g 追踪：", "w 已关闭");
+        return 1;
+    }
+
+    private static int trackerHud(CommandContext<CommandSourceStack> context, Boolean value) throws CommandSyntaxException
+    {
+        ServerPlayer player = context.getSource().getPlayerOrException();
+        boolean enabled = ServerProjectileTracker.toggleHud(player, value);
+        Messages.send(context.getSource(), "d CannonTool ", "g HUD：", "w " + (enabled ? "开" : "关"));
+        return 1;
+    }
+
+    private static int trackerTrail(CommandContext<CommandSourceStack> context, Boolean value) throws CommandSyntaxException
+    {
+        ServerPlayer player = context.getSource().getPlayerOrException();
+        boolean enabled = ServerProjectileTracker.toggleTrail(player, value);
+        Messages.send(context.getSource(), "d CannonTool ", "g 连线：", "w " + (enabled ? "开" : "关"));
+        return 1;
+    }
+
+    private static int trackerBox(CommandContext<CommandSourceStack> context, Boolean value) throws CommandSyntaxException
+    {
+        ServerPlayer player = context.getSource().getPlayerOrException();
+        boolean enabled = ServerProjectileTracker.toggleBox(player, value);
+        Messages.send(context.getSource(), "d CannonTool ", "g 方块标记：", "w " + (enabled ? "开" : "关"));
         return 1;
     }
 
     private static LiteralArgumentBuilder<CommandSourceStack> calcCommand()
     {
         return Commands.literal("calc")
+                .executes(context ->
+                {
+                    sendCalcHelp(context.getSource());
+                    return 1;
+                })
                 .then(Commands.literal("normal")
                         .then(Commands.argument("name", StringArgumentType.word())
                                 .suggests(CONFIG_SUGGESTIONS)
                                 .then(Commands.argument("x", DoubleArgumentType.doubleArg())
                                         .then(Commands.argument("z", DoubleArgumentType.doubleArg())
-                                                .executes(context -> calculate(context, false, 256, 0.0))
+                                                .executes(context -> ServerPearlCalc.calculate(context, false))
                                                 .then(Commands.argument("maxTicks", IntegerArgumentType.integer(1, 2000))
-                                                        .executes(context -> calculate(context, false,
-                                                                IntegerArgumentType.getInteger(context, "maxTicks"), 0.0)))))))
+                                                        .executes(context -> ServerPearlCalc.calculate(context, false)))))))
                 .then(Commands.literal("plane")
                         .then(Commands.argument("name", StringArgumentType.word())
                                 .suggests(CONFIG_SUGGESTIONS)
                                 .then(Commands.argument("x", DoubleArgumentType.doubleArg())
                                         .then(Commands.argument("z", DoubleArgumentType.doubleArg())
                                                 .then(Commands.argument("y", DoubleArgumentType.doubleArg())
-                                                        .executes(context -> calculate(context, true, 256,
-                                                                DoubleArgumentType.getDouble(context, "y")))
+                                                        .executes(context -> ServerPearlCalc.calculate(context, true))
                                                         .then(Commands.argument("maxTicks", IntegerArgumentType.integer(1, 2000))
-                                                                .executes(context -> calculate(context, true,
-                                                                        IntegerArgumentType.getInteger(context, "maxTicks"),
-                                                                        DoubleArgumentType.getDouble(context, "y")))))))));
+                                                                .executes(context -> ServerPearlCalc.calculate(context, true))))))))
+                .then(Commands.literal("expand")
+                        .then(Commands.argument("index", IntegerArgumentType.integer(1))
+                                .executes(ServerPearlCalc::expand)))
+                .then(Commands.literal("hud")
+                        .executes(context ->
+                        {
+                            Messages.fail(context.getSource(), "r 用法：", "g /cannon calc hud <序号|off>");
+                            return 0;
+                        })
+                        .then(Commands.literal("off").executes(ServerPearlCalc::hideHud))
+                        .then(Commands.argument("index", IntegerArgumentType.integer(1))
+                                .executes(ServerPearlCalc::showHud)));
     }
 
-    private static int calculate(CommandContext<CommandSourceStack> context, boolean plane, int maxTicks, double planeY)
+    private static void sendCalcHelp(CommandSourceStack source)
     {
-        CommandSourceStack source = context.getSource();
-        String name = StringArgumentType.getString(context, "name");
-        double x = DoubleArgumentType.getDouble(context, "x");
-        double z = DoubleArgumentType.getDouble(context, "z");
-
-        PearlCannonConfig config = PearlCannonConfigs.get(name);
-        if (config == null)
-        {
-            Messages.fail(source, "r 服务端没有配置 " + name);
-            return 0;
-        }
-        if (!config.hasReference())
-        {
-            Messages.fail(source, "r 配置 " + name + " 还没有基准 tick");
-            return 0;
-        }
-
-        List<PearlCannonSolver.Solution> results = plane
-                ? PearlCannonSolver.solvePlane(config, x, z, planeY, config.maxTnt, maxTicks)
-                : PearlCannonSolver.solve(config, x, z, config.maxTnt, maxTicks);
-
-        if (results.isEmpty())
-        {
-            Messages.fail(source, "r 没有找到可行解");
-            return 0;
-        }
-
-        Messages.send(source, "d CannonTool ", "g 计算 ", "w " + name, "g  → ",
-                "w " + Format.f3(x) + ", " + Format.f3(z) + (plane ? "  y=" + Format.f3(planeY) : ""),
-                "g   上限 ", "w " + maxTicks + " tick");
-
-        int index = 1;
-        for (PearlCannonSolver.Solution solution : results)
-        {
-            Messages.send(source, "g #" + index,
-                    "w  方向 ", "w " + solution.group(),
-                    "g  tick ", "w " + solution.ticks(),
-                    "g  蓝 ", "w " + solution.blue(),
-                    "g  红 ", "w " + solution.red(),
-                    "g  落点 ", "w " + Format.vec(solution.end()),
-                    "g  误差 ", "y " + Format.f3(solution.error()));
-            index++;
-        }
-        return 1;
+        Messages.send(source, "d CannonTool ", "g 服务端计算器");
+        help(source, "/cannon calc normal <名称> <x> <z> [最大tick]", "tick 模式");
+        help(source, "/cannon calc plane <名称> <x> <z> <y> [最大tick]", "平面模式");
+        help(source, "/cannon calc expand <序号>", "展开结果");
+        help(source, "/cannon calc hud <序号|off>", "持续显示配置编码");
     }
 
     private static void sendHelp(CommandSourceStack source)
     {
-        Messages.send(source, "d CannonTool ", "g 配置器");
+        Messages.send(source, "d CannonTool ", "g 命令");
         help(source, "/cannon calc normal <名称> <x> <z> [最大tick]", "服务端 tick 计算");
         help(source, "/cannon calc plane <名称> <x> <z> <y> [最大tick]", "服务端平面计算");
-        //? =26.1 {
+        help(source, "/cannon calc expand <序号>", "展开结果");
+        help(source, "/cannon calc hud <序号|off>", "持续显示配置编码");
         if (FabricLoader.getInstance().isModLoaded("ryansserverrenderingkit"))
         {
-            help(source, "/cannon trail <名称|off>", "服务端显示珍珠轨迹");
+            help(source, "/cannon tracker", "仅追踪当前投掷物");
+            help(source, "/cannon tracker on|off|once", "持续 / 关闭 / 仅当前");
+            help(source, "/cannon tracker hud [on|off]", "HUD 开关（默认开）");
+            help(source, "/cannon tracker trail [on|off]", "连线开关（UUID 着色，默认开）");
+            help(source, "/cannon tracker box [on|off]", "白色混凝土方块标记开关（碰撞箱大小，默认关）");
         }
-        //?}
         help(source, "/cannon config start <名称>", "开始配置");
         help(source, "/cannon config stop", "结束配置");
         help(source, "/cannon config list", "列出配置");
-        help(source, "/cannon config info", "查看当前配置");
+        help(source, "/cannon config info", "查看当前配置（无 start 时显示教程）");
         help(source, "/cannon config delete <名称>", "删除配置");
         help(source, "/cannon config maxTnt <数量>", "最大单侧药量");
         help(source, "/cannon config resetTick", "清空基准与样本");
